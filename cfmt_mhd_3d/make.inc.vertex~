@@ -1,0 +1,369 @@
+# vi: syntax=make
+# switches defining a specific model
+##
+# Dimensionality of Problem
+DIMN = 3
+
+####
+# high density regime EoS
+EOS_PRECISION = SINGLE
+#
+# 0 = 'off' , 1 = 'on'
+USE_LATTIMER_EOS  = 0
+USE_SI_EOS        = 0
+USE_SKA_EOS       = 0
+USE_SKM_EOS       = 0
+USE_SIII_EOS      = 0
+USE_WOLFF_EOS     = 0
+USE_WOLFF_LOW_EOS = 0
+USE_SHEN_EOS      = 0
+USE_YSA30_EOS     = 0
+USE_YSN0_EOS      = 0
+USE_YSR30_EOS     = 0
+USE_YSR90_EOS     = 0
+USE_YPISA30_EOS   = 0
+USE_YPISN0_EOS    = 0
+USE_YPISR30_EOS   = 0
+USE_YPISR90_EOS   = 0
+USE_SFHO_EOS      = 1
+USE_SFHX_EOS      = 0
+
+
+
+# Produce a file "vertex.unclean_exit" should
+# the program end via an error() or abort() statement
+UNCLEAN_EXIT_FILE=0
+
+# Print a stack trace after abort() or error() was called
+BACKTRACE_ON_ABORT=0
+
+# If BACKTRACE_ON_ABORT is enabled, you might also want to
+# enable EXPORT_DYNAMIC, which might make symbolic backtraces
+# possible
+WITH_EXPORT_DYNAMIC=0
+
+
+#######
+
+#######
+# use optimal switch between 1D and multi-D
+#
+OPTIMAL_13_SWITCH = 0
+
+# Spherical symmetric Eddington factor
+# (now set in the config file at runtime)
+
+# Compile with OpenMP support
+#  only disable for debugging
+WITH_OPENMP             = 0
+
+# Switch OpenMP on/off in parts of code
+# OpenMP in transport code (but not matrix solver)
+OPENMP_TRANSPORT        = 1
+# OpenMP in matrix solver (will only be used if also
+# OPENMP_TRANSPORT =1)
+OPENMP_MATRIX           = 1
+# OpenMP in hydro code (VERTEX)
+OPENMP_HYD              = 1
+# OpenMP in hydro code (CFC)
+OPENMP_CFC              = 1
+# OpenMP parallelisation strategy
+OPENMP_1D               = 0
+OPENMP_2D               = 1
+OPENMP_3D               = 0
+
+
+# Choose the EDDINGTON_FACTOR
+# SPERICAL should be set for 1D runs or MultiD-runs
+# with averaged Eddingtonfactor if not set
+# MULTID is assumed
+EDD_SPHERICAL          = 0
+
+
+
+# Compile with MPI support
+WITH_MPI               = 1
+
+# solvers for MATRIX SOLVER (in 1D use combined)
+THOMAS_LINEAR_SOLVER   = 1
+CYCLIC_LINEAR_SOLVER   = 0
+VCYCLIC_LINEAR_SOLVER  = 0
+COMBINED_LINEAR_SOLVER = 0
+
+##### Switches for mathematical vendor library routines #################
+#
+# Use vectorized mathematical functions in specfun.F90
+WITH_VENDOR_VECLIBS = 0
+
+# Use optimized lapack library
+WITH_VENDOR_LAPACK = 0
+
+#########################################################################
+
+
+##### switches controlling neutrino opacities ###########################
+# additionaly to the ones which you set at runtime in the config file
+# (now set in the config file at runtime)
+OPACITIES = -ULNGK_NICKELRATES
+#
+########################################################################
+
+
+##### switches for the gravitational potential ##########################
+# additionaly to the ones which you set at runtime in the config file:
+#
+# WRONG_PNU_POS: very old version of potential, wrong handling of
+#                neutrino pressure
+#
+CPP_GRAV = -UWRONG_PNU_POS
+#########################################################################
+
+
+
+##### switches for the equation of state ################################
+# (now set in the config file at runtime)
+#
+# ONEMG_EOS: Use special partition of low and high density EoS (see high_density_eos.F)
+ONEMG_EOS = -UONEMG_EOS -UNOMOTO_MODEL
+#
+#########################################################################
+
+
+
+#### switches for nuclear burning #######################################
+#
+
+CPP_BURN  = -UTAK_RATES -UBURN_NETWORK -UBURN_NETW_NOA \
+            -UTRIPLEALPHA -UTAK_SUBTIME -UBURN_SS \
+            -UNO_FLASHING_AT_SONIC_POINT
+
+#
+#
+#
+# _UNTESTED_ options (should not be used):
+# TAK_RATES:    include electron captures on Ne and Mg
+# TAK_SUBTIME:  subcycling for TAK_RATES
+# BURN_NETWORK: simplified burning network
+# BURN_NETW_NOA: alternative burning network, disregards changes of the
+#               mass fraction of alpha particle (do not use with BURN_NETWORK)
+# BURN_SS:      Supersonic burning of several intermediate mass elements
+#
+#
+#########################################################################
+
+
+#### switches for the hydrodynamics solver ##############################
+#
+
+CPP_HYDRO = -UMIX -DUSE_HLLE -DHLLE_AT_SONIC_POINT -DGRAVITY -DCMA -DENECONS -UENHANCEQ
+
+#
+# MIX:      simple mixing algorithm to mimick "convection" in
+#           1D simulations
+# USE_HLLE: switch to HLLE solver near shocks (-> avoid odd-even decoupling)
+# HLLE_AT_SONIC_POINT: switch to HLLE solver near sonic point
+# GRAVITY:  consider gravitational acceleration for PPM reconstruction
+# CMA:      use simplified method for consistent multi-fluid advection
+# ENECONS:  improved treatment of the energy equation as described in
+#           App. F of B. Muellers PhD thesis (-> better conservation
+#           properties) automatically switched off when using moving grid)
+#########################################################################
+
+
+
+##### switches for the GR treatment #####################################
+#
+CPP_RELATIVITY = -DCFC_TRANSPORT -UFC_TRANSPORT2 -DLATRS_HYD -DORIGIN -DAXIS \
+                 -DMOMENTUM_EQUATION_MODE=2 -DENFORCE_SPHERICAL_METRIC \
+		 -DCFC_MHD -UPASSIVE_MHD -DMHD_SOLVER=HLLC \
+		 -DHLLE=1 -DHLLC=2 -DHLLD=3 \
+		 -USEKORA_PPM -UCD_STEEPENING -UCONSTRAINED \
+                 -DCOARSENING -DEXTRACT_GW
+
+#
+# CFC_TRANSPORT:  use CoCoNuT as hydro solver (Newtonian/GR)
+# CFC_TRANSPORT2: do both hydro & transport in GR
+# LATRS_HYD:      calculate Doppler shift terms due to lateral compression
+#                 from calc_lat_redsh and not in advec_lat
+# ORIGIN:         enforce v_r=0 at the origin
+# AXIS:           enforce v_theta=0 on the axis
+# MOMENTUM_EQUATION_MODE:
+#                 - mode 0: original formulation of Banyuls et al. (1997)
+#                   for the relativistic momentum equation
+#                 - mode 1: collect pressure terms into a gradient term
+#                   as in PROMETHEUS
+#                 - mode 2: collect pressure terms into a gradient term
+#                   and use a cylindrical basis for the momentum density
+#                   -> eliminates some fictitious forces and improves
+#                   conservation of linear momentum in z-direction
+#
+#########################################################################
+
+
+
+##### switches controlling neutrino transport ###########################
+#
+
+# JVISC = 0 (switch J-viscosity completely off)
+# JVISC = 1 (use very old implementation of JVISC as coded by MARKUS RAMPP
+#            JVISC only used in transp.F)
+# JVISC = 2 (newer mode =1 , JVISC used in transp.F,eddfak.F)
+# JVISC = 3 (only use JVISC in the shock front)
+
+
+# if -UNEW_HE_TREAT => EXPOL_EDD GEOM_EDD_FRESH NOCOUPL_LEG_LOWB
+# are also switched off
+
+# if you want to use old MJR version (for viscosity, spectral treatment)
+# define FALLBACK_MJR JVISC=2 -URBURAS_SPEC_CUT -DNEW_HE_TREAT
+
+
+CPP_TRANS = -DEULGRID -ULAGGRID -DVELOCALL -DNOHCONTR -UDECOUPLE -UNFORCE \
+            -UUPWIND -UNOSPAR -UNOADVEC \
+            -DNEW_SPECTRAL_OBC -DEXTRAPOLATE_SPECTRUM  \
+            -DCONS_DOP  -DHARMONIC_MEAN \
+            -DNOCOUPL_LEG_LOWB -USPECCUT_SEVEN -URADICAL_CUT\
+            -DNEW_HE_TREAT -DEXPOL_EDD -UGEOM_EDD_FRESH \
+            -DBLIVISC -UFIX_LEG_BUG_ONE -UFIX_LEG_BUG_TWO \
+            -UFALLBACK_MJR -UEXPOL_EDD_OLD
+
+
+#
+# EULGRID:  Eulerian radial grid for neutrino transport
+# LAGGRID:  Lagrangian radial grid for neutrino transport (deprecated)
+# JVISC:    artificial radiative diffusivity also in J-eqn.
+# VELOCALL: switch on (v/c)-terms also in H-Eqn.
+# NOHCONTR: time-step control does not monitor neutrino flux changes
+# DECOUPLE: do not solve for Q_Y_e and Q_E along with the moment
+#           equations (DECOUPLE==2), or disregard inelastic scattering
+#           and pair processes for Q_Y_e and Q_E
+# NFORCE:   disregard neutrino momentum source-term (caution: implementation
+#                                                    is problematic)
+# UPWIND:   use upwind scheme for Doppler shift in moment equations
+# NOSPAR:   use energy moments J & H instead of number moments G & F to
+#           compute Q_Y_e
+# NOADVEC:  switch off lateral advection (+ pressure work terms
+#           and alike) in the pseudo-2D neutrino transport
+# NEW_SPECTRAL_OBC: more stable boundary conditions for Doppler shift
+# EXTRAPOLATE_SPECTRUM: use extrapolation routine to turn lowebins back on
+#                       and to set effective boundary conditions
+# CONS_DOP: use neutrino number conserving implementation of Doppler terms
+#           and switch off neutrino number transport (see momeq.F)
+# NOCOUPL_LEG_LOWB: consistently switch off scattering into and out of lowebins
+# SPECCUT_SEVEN: more radical method for switching off bins
+# RADIAL_CUT: see momeq.F/momeq_std.F/momeq_vcyc.F
+# NEW_HE_TREATMENT: new handling of lowebins by R.Buras (lowebins also
+#                   in Boltzmann equation, local criterion for lowebins)
+# EXPOL_EDD: also extrapolate neutrino intensites (j+, j-) for lowebins
+# GEOM_EDD_FRESH: geometric interpolation for Doppler shifts in
+#                 Boltzmann equation
+# BLVISC:   artificial viscosity for H-equation
+# JVISC:    artifical viscosity for J-equation (only in shock region)
+#########################################################################
+
+
+
+#### switches for long-time runs ########################################
+#
+
+CPP_LONGTIME = -URAND_DT_RAD -UDAMPNSV -UAVDAMP
+
+#
+# RAND_DT_RAD: randomize dt
+# DAMPNSV: high frequency oscillations damped in PNS
+# AVDAMP:  low frequency oscillations damped in PNS
+#
+#########################################################################
+
+
+
+##### switches for debugging purposes and BENCHMARKING ##################
+#
+
+CPP_DEBUG =  -UNOHYDRO -DNOTRA -UNOVELO_TR -DDIAGNOSE=0 -UBENCHMARK -DWRITE_BINARY_OUTPUT -UENABLE_CUDAF
+
+#
+# NOHYDRO:   switch off hydro-solver
+# NOTRA:     switch off neutrino-transport
+# NOVELO_TR: set v=0 in neutrino-transport
+# DIAGNOSE:  different levels of diagnose output
+#
+#########################################################################
+
+########################################################################
+#
+# Flags to deactivate output
+#
+# DEACTIVATE_OUTPUT will result in not calling output routines (from vertex.F90)
+# HDF5_OUTPUT will allow you to compile the code WITHOUT HDF5-libs available
+# consequently this flag needs DEACTIVATE_OUTPUT to be defined
+
+CPP_OUTPUT =
+########################################################################
+
+
+#### Experimental switches ##############################################
+#
+# The following switches  were _NOT_ thoroughly tested for all applications
+# use them with care; testing would be nice and necessary :-))
+# if tested and approved remove the respective switch here and place somewhere
+# else
+
+TESTSWITCHES = -URBURAS -UKJT_NO_MANY_BODY_EFF -URBURAS_SPECCUT \
+               -UNEW_QMO -UFIX_VELO_GRPOT -UOLDEST_POT \
+               -UFCNC_CALC \
+               -DNEW_OUTPUT_LABELS \
+               -UVAR_THETA_GRID -UHTCL -UCHECK_MEMORY \
+               -UREAD_OLD_RESTART_FILES -UCHECK_THREAD_AFFINITY \
+               -UUSE_MEMORY_MAPPING -UDYNAMIC_EOS \
+               -UDEBUG_TIMINGS -DCALC_GW=0 \
+               -UNSMIX \
+               -UBLOCKWISE_EOS \
+               -UFIX_OBH \
+               -UFIXCORE \
+               -UFIX_INNER \
+               -UREAD_TEM \
+               -UCRAY -UCRAY_CMIC
+
+
+#########################################################################
+
+
+
+###################################################################
+#
+# Flags for the c-code network
+# NETWORK_OUTPUT_TIMEEVOLUTION print composition for all substeps
+# within the solver and writes it to network_output.dat
+
+CPP_NETWORK_CODE = -DNUCLEAR_NETWORK -UWEAKRATES -UNETWORK_SCREENING \
+                   -DSTANDALONE -DREACLIB1 -UFIXED_TEMPERATURE \
+                   -DNEGLECT_DTDY_TERMS -UNETWORK_OUTPUT_TIMEEVOLUTION \
+                   -USOLVER_PARDISO
+                 # -DSUPERLU -I/usr/include/superlu
+
+#
+#########################################################
+
+
+###################################################################
+#
+# CONVECTION_1D:  mixing length algorithm for convection in 1D
+#                 simulations, useable for CoCoNuT and VERTEX
+#
+CONVECTION_1D=0
+CONV_PARAM_1=1.0_rk
+#
+###################################################################
+#
+# To be able to read in an external hydro grid.
+#
+
+INITIAL_HYDRO_GRID_FILE=0
+
+###################################################################
+
+# Rest is done in make.inc.vertex.logic
+include make.inc.vertex.logic
+
+# vi: syntax=make expandtab

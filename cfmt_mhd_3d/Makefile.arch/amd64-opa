@@ -1,0 +1,114 @@
+# For OPA cluster, amd64 Intel Xeon
+
+###############
+# Preprocessor
+CPPFLAGS += -DLINUX -DINTEL_COMPILER
+
+
+###############
+# Fortran
+# default compiler
+FC = ifort
+
+# universal fortran compiler flags 
+FFLAGS = -convert big_endian -r8 
+FFLAGS_FREE  = -FR
+FFLAGS_FIXED = -FI
+
+
+###############
+# C
+# default compiler
+CC = icc
+
+# universal c compiler flags
+CFLAGS =
+
+
+###############
+# Flags for specific files:
+
+
+###############
+# Linking
+
+# default linker
+LD = ifort
+
+# universal linker flags
+LDFLAGS =
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O4
+OPT_CFLAGS          = -O2
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -g -C -traceback -zero -fpe0 -CA -CB  -check all,noarg_temp_created -override-limits  
+DEBUG_CHECKS_CFLAGS   = -g
+
+DEBUG_SYMBOLS_FFLAGS    = -g  
+DEBUG_SYMBOLS_CFLAGS    = -g
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -openmp
+OPENMP_CFLAGS  = -openmp
+OPENMP_LDFLAGS = -openmp
+
+
+###############
+# HDF5
+HDF5_HOME = /afs/rzg/common/soft/hdf5/1.8.4-patch1/amd64_sles11/intel/11.1/serial
+HDF5_FFLAGS  = -I$(HDF5_HOME)/include
+HDF5_CFLAGS  = -I$(HDF5_HOME)/include
+HDF5_LDFLAGS = $(HDF5_HOME)/lib/libhdf5_fortran.a $(HDF5_HOME)/lib/libhdf5.a -lz -lm
+
+
+###############
+# MPI
+MPI_FC        = /afs/rzg/amd64_linux26/soft/mvapich/mpich2-1.0.7/f95i.10.1/bin/mpif90
+MPI_CC        = $(CC)
+MPI_LD        = $(MPI_FC)
+MPI_FFLAGS    =
+MPI_CFLAGS    =
+MPI_LDFLAGS   =
+MPI_HDF5_HOME = 
+	
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    =
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  = 
+GSL_LDFLAGS = -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS = -L/afs/rzg/amd64_sles9/soft/intel/mkl/lib/em64t \
+                         -lmkl_lapack -lmkl_em64t -lguide -lpthread
+VENDOR_LAPACK_LDFLAGS  = $(call unless_feature_set,VENDOR_VECLIBS,$(VENDOR_VECLIBS_LDFLAGS))
+
+
+###############
+# Marmot as an example where one would replace the compilers
+MARMOT_FC = marmotf90
+MARMOT_LD = marmotf90
+
+
+# vi: syntax=make expandtab

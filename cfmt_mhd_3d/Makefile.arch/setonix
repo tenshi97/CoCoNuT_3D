@@ -1,0 +1,139 @@
+# CRAY FTN compiler
+# Template for ARCH sub makefile
+
+###############
+# Preprocessor
+# Add machine specific flags to the preprocessor flags
+CPPFLAGS += -DLINUX -DJUROPA -USETONIX -DHDF5_1_10
+
+
+###############
+# Fortran
+# default compiler
+FC = ftn
+FORTRAN_MOD_FILE_NAME = 'sub { my $$mod = shift; return uc($$mod) . ".mod"; }'
+
+# universal fortran compiler flags
+FFLAGS = -DMYTIME_-hbyteswapio -e m -O modinline -e a -e C -e 0 -d v -d w -s real64 -h pic #-h acc_model=no_fast_addr -h heap_allocate
+FFLAGS_FREE  = -f free
+FFLAGS_FIXED = -f fixed
+FORTRAN_MOD_FILE_NAME = 'sub { my $$mod = shift; return uc($$mod) . ".mod"; }'
+
+###############
+# C
+# default compiler
+CC = cc
+
+# universal c compiler flags
+CFLAGS = -h pic -h heap_allocate
+
+
+###############
+# Flags for specific files:
+#FFLAGS_REMOVE_ppm_cfc.f  = -O3
+#FFLAGS_ADD_ppm_cfc.f  = -O2
+#FFLAGS_REMOVE_reconstruct_ppm.f  = -O3
+#FFLAGS_ADD_reconstruct_ppm.f  = -O2
+#FFLAGS_REMOVE_recover_prim_vars.f  = -O1
+#FFLAGS_ADD_recover_prim_vars.f  = -O0
+#FFLAGS_REMOVE_eos.f90  = -O3
+#FFLAGS_ADD_eos.f90  = -O2
+
+
+###############
+# Linking
+
+# default linker
+LD =  ftn
+
+# universal linker flags
+LDFLAGS = -hbyteswapio -h pic #-h acc_model=no_fast_addr -fsanitize=address -h heap_allocate
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O2 -fno-openmp # -h ipa0 -hfp1 -h noacc
+OPT_CFLAGS          = -O2 -fno-openmp # -h ipa0 -hfp1 -h noacc
+
+NO_OPT_FFLAGS       = -O0 -h ipa0 -fno-openmp -hfp1 -h noacc
+NO_OPT_CFLAGS       = -O0 -h ipa0 -fno-openmp -hfp1 -h noacc
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -G1 -K trap=denorm,divz,fp,inexact,inv,ovf,unf -fsanitize=address -Rbcdps
+DEBUG_CHECKS_CFLAGS   = -G1 -fsanitize=address
+
+DEBUG_SYMBOLS_FFLAGS    = -g  -fsanitize=address
+DEBUG_SYMBOLS_CFLAGS    = -g  -fsanitize=address
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -homp
+OPENMP_CFLAGS  = -homp
+OPENMP_LDFLAGS = -homp
+
+
+###############
+# HDF5
+HDF5_HOME = $(HDF5_DIR)
+#HDF5_HOME = /opt/cray/hdf5-parallel/1.8.5.0/hdf5-parallel-cce
+
+###############
+# MPI
+MPI_FC        = ftn
+MPI_CC        = cc
+MPI_LD        = ftn
+MPI_FFLAGS    = 
+MPI_CFLAGS    = 
+MPI_LDFLAGS   = #-L/opt/cray/mpt/7.0.0/gni/mpich2-cray/83/lib 
+MPI_HDF5_HOME = $(HDF5_DIR) #$(HOME)/hdf5-1.12.2/hdf5
+
+
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    =
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  = -I$(GSL_DIR)/include #a-I/afs/rzg/common/soft/gsl/1.14/@sys/include/
+GSL_LDFLAGS = -L$(GSL_DIR)/lib #a-L/afs/rzg/common/soft/gsl/1.14/@sys/lib -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+#VENDOR_LAPACK_LDFLAGS  = -lfast_mv -lsci_mc12 -L /cray/css/u7/kjt/opt/profiler -lprofiler -lhugetlbfs
+#VENDOR_LAPACK_LDFLAGS  = -lfast_mv -lsci_mc12  -lhugetlbfs
+VENDOR_LAPACK_LDFLAGS  = #-L/opt/xt-libsci/11.0.03/cray/74/interlagos/lib # /cray/css/u7/kjt/opt/profiler -lprofiler -lhugetlbfs
+
+#VENDOR_LAPACK_LDFLAGS  = -lhugetlbfs
+#VENDOR_LAPACK_LDFLAGS  = $(call unless_feature_set,VENDOR_VECLIBS,$(VENDOR_VECLIBS_LDFLAGS))
+
+
+###############
+# PERFLIB
+PERFLIB_LDFLAGS =
+
+###############
+# MPITRACE
+MPITRACE_LDFLAGS =
+
+###############
+# Intels traceanalyser
+#TRACE_ANALYSER_LDFLAGS =
+TRACE_ANALYSER_LDFLAGS =
+
+###############
+# SCALASCA
+SCALASCA_FC_WRAPPER = scalasca -instrument
+SCALASCA_LD_WRAPPER = scalasca -instrument
+
+
+# vi: syntax=make expandtab

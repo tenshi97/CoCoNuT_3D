@@ -1,0 +1,127 @@
+# MPA amd64 machines, intel compiler
+
+###############
+# Preprocessor
+CPPFLAGS += -DLINUX -DINTEL_COMPILER
+
+
+
+###############
+# Fortran
+# default compiler
+FC = ifort
+
+# universal fortran compiler flags
+FFLAGS = -convert big_endian -r8 -mcmodel=medium
+FFLAGS_FREE  = -FR
+FFLAGS_FIXED = -FI
+
+
+###############
+# C
+# default compiler
+CC = icc
+
+# universal c compiler flags
+CFLAGS = -mcmodel=medium
+
+
+###############
+# Flags for specific files:
+
+
+###############
+# Linking
+
+# default linker
+LD = ifort
+
+# universal linker flags
+LDFLAGS =
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O3
+OPT_CFLAGS          = -O3
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -C -traceback -ftrapuv -CA -CB -check all,noarg_temp_created -override-limits
+DEBUG_CHECKS_LDFLAGS  = -fpe0
+DEBUG_CHECKS_CFLAGS   =
+
+DEBUG_SYMBOLS_FFLAGS    = -debug all -debug-parameters all
+DEBUG_SYMBOLS_CFLAGS    = -debug all
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -openmp
+OPENMP_CFLAGS  = -openmp
+OPENMP_LDFLAGS = -openmp
+
+###############
+# HDF5
+HDF5_HOME    = /afs/mpa/project/vertex/software/@sys/hdf5/1.8.8/serial/intel
+
+
+###############
+# MPI
+MPI_FC        = ifort
+MPI_CC        = icc
+MPI_LD        = ifort
+MPI_FFLAGS    = -pthread -I/usr/lib64 -I/usr/include
+MPI_CFLAGS    = -pthread -I/usr/lib64
+MPI_LDFLAGS   = -pthread -L/usr/lib64 -lmpi_f90 -lmpi_f77 -lmpi -lopen-rte -lopen-pal -ldl -Wl,--export-dynamic -lnsl -lutil -lm -ldl
+MPI_HDF5_HOME = /afs/mpa/project/vertex/software/@sys/hdf5/1.8.8/mpi/intel
+
+# Intel compiler cannot use gfortran module...
+USE_MPIF_H    = 1
+
+
+###############
+# Strict IEEE floating point conformance
+STRICT_FP_FFLAGS = -fp-model strict -fltconsistency
+STRICT_FP_CFLAGS = -fp-model strict -mieee-fp
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  =
+GSL_LDFLAGS = -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS = -L/afs/rzg/amd64_sles9/soft/intel/mkl/lib/em64t -lmkl_lapack -lmkl_em64t -lguide -lpthread
+VENDOR_LAPACK_LDFLAGS  = $(call unless_feature_set,VENDOR_VECLIBS,$(VENDOR_VECLIBS_LDFLAGS))
+
+
+###############
+# Position independent code
+PIC_FFLAGS = -fPIC
+PIC_CFLAGS = -fPIC
+
+
+##############
+# F2PY
+F2PY_CCOMPILER = intel
+F2PY_FCOMPILER = intelem
+
+
+##############
+# Function call trace
+CALL_TRACE_FFLAGS = -finstrument-functions
+CALL_TRACE_CFLAGS = -finstrument-functions
+EXPORT_DYNAMIC_LDFLAGS = -Wl,--export-dynamic
+
+
+# vi: syntax=make expandtab

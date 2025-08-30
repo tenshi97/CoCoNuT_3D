@@ -1,0 +1,36 @@
+#!/bin/bash
+# specify the queue name
+# resource requests
+#PBS -P fh6
+#PBS -q normal
+#PBS -l ncpus=528
+#PBS -l walltime=00:4:59
+#PBS -l mem=2048gb
+#PBS -l software=intel-compiler
+#PBS -l storage=scratch/fh6
+
+# list the assigned CPUs and GPUs
+echo Deploying job to CPU
+cat $PBS_NODEFILE
+#echo and using GPU …
+#cat $PBS_GPUFILE
+
+ulimit
+ulimit -s unlimited
+
+# run process
+cd /scratch/fh6/zw5033/tmp/cfmt_3d
+
+export PATH=.:$PATH
+
+module load libfabric/1.8.0a1
+module load intel-compiler/2019.3.199
+module load intel-mkl/2019.3.199
+module load openmpi/3.1.4
+module load hdf5/1.10.5p 
+module load szip
+
+export MP_BUFFER_MEM=64m
+
+mpirun -np 512 ./rh_3d.x.
+

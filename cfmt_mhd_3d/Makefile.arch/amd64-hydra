@@ -1,0 +1,110 @@
+# CURIE
+
+###############
+# Preprocessor
+# Add machine specific flags to the preprocessor flags
+CPPFLAGS += -DLINUX -DJUROPA -DINTEL_COMPILER
+
+
+###############
+# Fortran
+# default compiler
+FC = ifort
+
+# universal fortran compiler flags
+FFLAGS = -convert big_endian -r8 -mcmodel=medium -shared-intel -override-limits -fp-model source -fp-model precise
+FFLAGS_FREE  = -FR
+FFLAGS_FIXED = -FI
+
+
+###############
+# C
+# default compiler
+CC = icc
+
+# universal c compiler flags
+CFLAGS = -mcmodel=medium
+
+
+###############
+# Flags for specific files:
+#FFLAGS_ADD_eddfak.f90  = -fp-model precise -fp-model source -fp-model strict
+FFLAGS_ADD_momeq.f90  = -fp-model precise -fp-model source 
+FFLAGS_ADD_transp.f90 = -fp-model precise -fp-model source 
+
+
+###############
+# Linking
+
+# default linker
+LD = ifort
+
+# universal linker flags
+LDFLAGS =
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O3  -xAVX  # -ip -xSSE4.2
+OPT_CFLAGS          = -O3
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -g -C -traceback -zero -fpe0 -CA -CB  \
+		      -check all,noarg_temp_created -debug all
+DEBUG_CHECKS_CFLAGS   = -g
+
+DEBUG_SYMBOLS_FFLAGS    = -g
+DEBUG_SYMBOLS_CFLAGS    = -g
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -openmp
+OPENMP_CFLAGS  = -openmp
+OPENMP_LDFLAGS = -openmp
+
+###############
+# HDF5
+#HDF5_HOME = /u/system/SLES11/soft/hdf5/1.8.9/intel12.1/serial
+HDF5_HOME = /u/system/SLES11/soft/hdf5/1.8.9/intel12.1/pe1209
+
+
+###############
+# MPI
+MPI_FC        = mpiifort
+MPI_CC        = mpiicc
+MPI_LD        = mpiifort
+MPI_FFLAGS    =
+MPI_CFLAGS    =
+MPI_LDFLAGS   =
+MPI_HDF5_HOME =
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    = 0
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  = -I/u/system/SLES11/soft/gsl/1.15/include
+GSL_LDFLAGS = -L/u/system/SLES11/soft/gsl/1.15/lib -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS =
+
+VENDOR_LAPACK_LDFLAGS  =  -L/u/system/SLES11/soft/intel/12.1/mkl/lib/intel64/ \
+                         -lmkl_intel_lp64 -lmkl_intel_thread  -lmkl_core  -lpthread -liomp5 -lpthread
+
+
+# vi: syntax=make expandtab

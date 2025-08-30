@@ -1,0 +1,10 @@
+# Parameter file -- (*): Data are not overwritten by restart file data
+rk_order=3                        # 2: Runge-Kutta second order
+                                  # 3: Runge-Kutta third order
+conversion_tolerance=1.0d-8       # tolerance for recovery of primitive vars
+metric_tolerance=1.0d-8           # tolerance for delta_u in metric solver (method 2)
+newtonian_potential_form=8        # 1: regular Newtonian potential
+                                  # 2: effective relativistic TOV potential
+                                  # 3-9: modified effective relativistic TOV potential
+
+

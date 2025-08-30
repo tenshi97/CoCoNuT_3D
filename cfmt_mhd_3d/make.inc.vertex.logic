@@ -1,0 +1,294 @@
+#set the executable name according to the specified problem dimensionality
+ifeq ($(DIMN),1)
+     EXE_DEFAULT = rh_1d
+endif
+ifeq ($(DIMN),2)
+     EXE_DEFAULT = rh_2d
+endif
+ifeq ($(DIMN),3)
+     EXE_DEFAULT = rh_3d
+endif
+
+CPP_DIMENS = -DDIMN=$(DIMN)
+
+#set the OpenMP parallelisation strategy
+CPP_OPT = -UOPEN_MP_1D -UOPEN_MP_2D -UOPEN_MP_3D -UOPEN_MP_3D_TRA
+ifeq ($(OPENMP_1D),1)
+      CPP_OPT = -DOPEN_MP_1D -UOPEN_MP_2D -UOPEN_MP_3D -UOPEN_MP_3D_TRA
+else
+   ifeq ($(OPENMP_2D),1)
+         CPP_OPT = -UOPEN_MP_1D -DOPEN_MP_2D -UOPEN_MP_3D -UOPEN_MP_3D_TRA
+   else
+      ifeq ($(OPENMP_3D),1)
+            CPP_OPT = -UOPEN_MP_1D -UOPEN_MP_2D -DOPEN_MP_3D -DOPEN_MP_3D_TRA
+      endif
+   endif
+endif
+
+ifneq ($(WITH_MPI),0)
+  CPPFLAGS += -DMPI_HYDRO
+endif
+
+#set the Eddington factor
+CPP_EDD   = -DEDD_FACT_1D -UEDD_FACT_2D -UEDD_FACT_3D
+
+ifeq ($(EDD_SPHERICAL),1)
+     CPP_EDD   = -DEDD_FACT_1D -UEDD_FACT_2D -UEDD_FACT_3D
+else
+     ifeq ($(DIMN),2)
+          CPP_EDD   = -UEDD_FACT_1D -DEDD_FACT_2D -UEDD_FACT_3D
+     else
+          CPP_EDD   = -UEDD_FACT_1D -UEDD_FACT_2D -DEDD_FACT_3D
+     endif
+endif
+
+#set Matrix solver algorithm
+ifeq ($(THOMAS_LINEAR_SOLVER), 1)
+      CPP_SLV = -DSOLVER_THOMAS    \
+                -USOLVER_CYCLIC    \
+                -USOLVER_VCYCLIC   \
+                -USOLVER_COMBINED
+else
+  ifeq ($(CYCLIC_LINEAR_SOLVER), 1)
+        CPP_SLV = -DSOLVER_CYCLIC    \
+                  -USOLVER_THOMAS    \
+                  -USOLVER_VCYCLIC   \
+                  -USOLVER_COMBINED
+  else
+    ifeq ($(VCYCLIC_LINEAR_SOLVER), 1)
+          CPP_SLV = -DSOLVER_VCYCLIC   \
+                    -USOLVER_THOMAS    \
+                    -USOLVER_CYCLIC
+                    -USOLVER_COMBINED
+    else
+      ifeq ($(COMBINED_LINEAR_SOLVER), 1)
+            CPP_SLV = -DSOLVER_COMBINED  \
+                      -USOLVER_THOMAS    \
+                      -USOLVER_CYCLIC    \
+                      -USOLVER_VCYCLIC
+      endif
+    endif
+  endif
+endif
+
+# gather settings of LOW-DENSITY-EOS
+CPP_LOW_DEN_EOS   =  $(ONEMG_EOS)
+
+# logic for OpenMP
+
+# switch on/off OpenMP statements in hydro part
+ifeq ($(OPENMP_HYD), 0)
+CPP_OPT += -UOPENMP_HYD
+else
+CPP_OPT += -DOPENMP_HYD
+endif
+
+# switch on/off OpenMP statements in  transport part
+ifeq ($(OPENMP_TRANSPORT), 0)
+CPP_OPT += -UOPENMP_TRANSPORT
+else
+CPP_OPT += -DOPENMP_TRANSPORT
+endif
+
+# switch on/off OpenMP statements in matrix solver
+# (will be always disabled if OPENMP_TRANSPORT=0)
+ifeq ($(OPENMP_MATRIX), 0)
+CPP_OPT += -UOPENMP_MATRIX
+else
+CPP_OPT += -DOPENMP_MATRIX
+endif
+
+# switch on/off OpenMP statements in cfc part
+ifeq ($(OPENMP_CFC), 0)
+CPP_OPT += -UOPENMP_CFC
+else
+CPP_OPT += -DOPENMP_CFC
+endif
+
+# undefine all OpenMP if compiled without
+ifeq ($(WITH_OPENMP), 0)
+CPP_OPT =  -UOPENMP_HYD -UOPENMP_TRANSPORT -UOPENMP_MATRIX -UOPENMP_CFC
+endif
+
+
+
+
+
+# DEFAULT in order to make compiling impossible for bad input
+# of HIGH DENSITY EoS
+
+ifeq ($(EOS_PRECISION), DOUBLE)
+  EOS_PRECISION_FLAG = -DDOUBLE_PRECISION_EOS
+else
+  EOS_PRECISION_FLAG = -UDOUBLE_PRECISION_EOS
+endif
+
+
+# DEFAULT in order to make compiling impossible for bad input
+# of HIGH DENSITY EoS
+
+ifeq ($(EOS_PRECISION), DOUBLE)
+  EOS_PRECISION_FLAG = -DDOUBLE_PRECISION_EOS
+else
+  EOS_PRECISION_FLAG = -UDOUBLE_PRECISION_EOS
+endif
+
+LATTIMER_FLAG = -ULATTIMER_EOS
+SI_FLAG = -USI_EOS
+SKA_FLAG = -USKA_EOS
+SKM_FLAG = -USKM_EOS
+SIII_FLAG = -USIII_EOS
+WOLFF_FLAG = -UWOLFF_EOS
+SHEN_FLAG = -USHEN_EOS
+YSA30_FLAG = -UYSA30_EOS
+YSN0_FLAG = -UYSN0_EOS
+YSR30_FLAG = -UYSR30_EOS
+YSR90_FLAG = -UYSR90_EOS
+YPISA30_FLAG = -UYPISA30_EOS
+YPISN0_FLAG = -UYPISN0_EOS
+YPISR30_FLAG = -UYPISR30_EOS
+YPISR90_FLAG = -UYPISR90_EOS
+SFHO_FLAG = -USFHO_EOS
+SFHX_FLAG = -USFHX_EOS
+
+EOS_HIGH_DEN_FLAG = -DHIGH_DEN_EOS_FLAG=0
+# one means not used, 4 used
+EOS_INTERMEDIATE_FLAG = -DINTERMEDIATE_EOS_FLAG=1
+
+ifeq ($(USE_LATTIMER_EOS), 1)
+     ifeq ($(USE_WOLFF_EOS), 0)
+      ifeq ($(USE_SHEN_EOS), 0)
+        LATTIMER_FLAG = -DLATTIMER_EOS
+	EOS_HIGH_DEN_FLAG = -DHIGH_DEN_EOS_FLAG=1
+      endif
+     endif
+endif
+
+ifeq ($(USE_WOLFF_EOS), 1)
+     ifeq ($(USE_LATTIMER_EOS), 0)
+      ifeq ($(USE_SHEN_EOS), 0)
+        WOLFF_FLAG = -DWOLFF_EOS
+	EOS_HIGH_DEN_FLAG = -DHIGH_DEN_EOS_FLAG=2
+      endif
+     endif
+endif
+
+ifeq ($(USE_WOLFF_LOW_EOS),1)
+CPP_INTERMEDIATE_EOS  = -DWOLFFEOS_LOW
+EOS_INTERMEDIATE_FLAG = -DINTERMEDIATE_EOS_FLAG=4
+endif
+
+ifeq ($(USE_SHEN_EOS), 1)
+     ifeq ($(USE_LATTIMER_EOS), 0)
+      ifeq ($(USE_WOLFF_EOS), 0)
+        SHEN_FLAG = -DSHEN_EOS
+	EOS_NUMBERS = -DHIGH_DEN_EOS_FLAG = 3 -DINTERMEDIATE_EOS_FLAG = 0
+	EOS_HIGH_DEN_FLAG = -DHIGH_DEN_EOS_FLAG=3
+      endif
+     endif
+endif
+
+
+ifeq ($(USE_SI_EOS), 1)
+        SI_FLAG = -DSI_EOS
+endif
+
+ifeq ($(USE_SKA_EOS), 1)
+        SKA_FLAG = -DSKA_EOS
+endif
+
+ifeq ($(USE_SKM_EOS), 1)
+        SKM_FLAG = -DSKM_EOS
+endif
+
+ifeq ($(USE_SIII_EOS), 1)
+        SIII_FLAG = -DSIII_EOS
+endif
+
+ifeq ($(USE_YSA30_EOS), 1)
+        YSA30_FLAG = -DYSA30_EOS
+endif
+
+ifeq ($(USE_YSN0_EOS), 1)
+        YSN0_FLAG = -DYSN0_EOS
+endif
+
+ifeq ($(USE_YSR30_EOS), 1)
+        YSR30_FLAG = -DYSR30_EOS
+endif
+
+ifeq ($(USE_YSR90_EOS), 1)
+        YSR90_FLAG = -DYSR90_EOS
+endif
+
+ifeq ($(USE_YPISA30_EOS), 1)
+        YPISA30_FLAG = -DYPISA30_EOS
+endif
+
+ifeq ($(USE_YPISN0_EOS), 1)
+        YPISN0_FLAG = -DYPISN0_EOS
+endif
+
+ifeq ($(USE_YPISR30_EOS), 1)
+        YPISR30_FLAG = -DYPISR30_EOS
+endif
+
+ifeq ($(USE_YPISR90_EOS), 1)
+        YPISR90_FLAG = -DYPISR90_EOS
+endif
+
+ifeq ($(USE_SFHO_EOS), 1)
+        SFHO_FLAG = -DSFHO_EOS
+        EOS_HIGH_DEN_FLAG = -DHIGH_DEN_EOS_FLAG=5
+endif
+
+ifeq ($(USE_SFHX_EOS), 1)
+        SFHX_FLAG = -DSFHX_EOS
+        EOS_HIGH_DEN_FLAG = -DHIGH_DEN_EOS_FLAG=5
+endif
+
+
+
+CPP_HIGH_DEN_EOS = $(EOS_PRECISION_FLAG) $(EOS_HIGH_DEN_FLAG) $(EOS_INTERMEDIATE_FLAG) $(LATTIMER_FLAG) $(SI_FLAG) $(SKA_FLAG) $(SKM_FLAG) $(SIII_FLAG) $(WOLFF_FLAG) $(SHEN_FLAG) $(YSA30_FLAG) $(YSN0_FLAG) $(YSR30_FLAG) $(YSR90_FLAG) $(YPISA30_FLAG) $(YPISN0_FLAG) $(YPISR30_FLAG) $(YPISR90_FLAG) $(SFHO_FLAG) $(SFHX_FLAG)
+
+
+
+ifeq ($(UNCLEAN_EXIT_FILE), 1)
+  TESTSWITCHES += -DUNCLEAN_EXIT_FILE
+endif
+
+ifeq ($(OPTIMAL_13_SWITCH), 1)
+  TESTSWITCHES += -DOPTIMAL_13_SWITCH
+endif
+
+CPP_SWITCH = -UOLD_UFMIO $(OPACITIES) \
+              $(CPP_HIGH_DEN_EOS) $(CPP_INTERMEDIATE_EOS) $(COMPCHANGES) -UDESKTOP_LINUX \
+              $(TESTSWITCHES) $(PLOTTERS) $(CPP_OUTPUT)
+
+ifeq ($(CONVECTION_1D), 1)
+  CPP_HYDRO += -DCONVECTION_1D -DCONV_PARAM_1=$(CONV_PARAM_1)
+endif
+
+ifdef MKLROOT
+  CPP_NETWORK_CODE += -I$(MKLROOT)/include
+endif
+
+INLROUT = etapike,fun_ele,mapnuc,signue,intpint,pi0kjt,etanuc
+
+CPPFLAGS += $(CPP_DIMENS) $(CPP_SWITCH) $(CPP_TRANS) $(CPP_EDD) \
+            $(CPP_SLV) $(CPP_LAPACK) $(CPP_VLIBS) $(CPP_GRAV) \
+            $(CPP_LOW_DEN_EOS) \
+            $(CPP_BURN)   $(CPP_HYDRO) $(CPP_RELATIVITY) $(CPP_DEBUG) \
+            $(CPP_FIXES) $(CPP_ARTIF) $(CPP_NETWORK_CODE) $(CPP_OPT)
+
+
+ifeq ($(BACKTRACE_ON_ABORT),1)
+  CPPFLAGS += -DBACKTRACE_ON_ABORT
+endif
+
+
+ifeq ($(INITIAL_HYDRO_GRID_FILE),1)
+  CPP_HYDRO += -DINITIAL_HYDRO_GRID_FILE
+endif
+
+# vi: syntax=make

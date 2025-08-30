@@ -1,0 +1,117 @@
+# Power 6 at RZG
+
+###############
+# Preprocessor
+CPPFLAGS += -DIBM -DIBM_COMPILER -UIBM_OPT -UHPM
+
+
+###############
+# Fortran
+FC = xlf90_r
+FFLAGS = -q64 -qxlf90=autodealloc -qreport=smplist -qrealsize=8 -qdpc -bloadmap:check.list 
+FFLAGS_FREE  = -qfree=f90
+FFLAGS_FIXED = -qfixed
+
+
+###############
+# C
+CC = xlc_r
+CFLAGS = -q64 -qlanglvl=stdc99 -D_LARGE_FILES
+
+
+###############
+# Flags for specific files
+# pairs.f90 and momeq.f90 crash compiler when using -qextchk
+FFLAGS_REMOVE_pairs.f90 = -qextchk
+FFLAGS_REMOVE_momeq.f90 = -qextchk
+FFLAGS_REMOVE_kjtrates_table.f90 = -qreport=smplist
+
+
+###############
+# Linking
+LD = xlf90_r
+LDFLAGS = -q64 -b64 -blpdata
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O4 -qnoipa -qarch=pwr6 -qnosave -qsmp=omp:noauto -qmaxmem=-1 -qnohot -qstrict
+OPT_CFLAGS          = -O2
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS  = -g -C -qsigtrap -qflttrap=overflow:zerodivide:invalid:enable \
+                       -qlanglvl=90pure -qsource -qextchk -qwarn64 -qinitauto=FF
+DEBUG_CHECKS_CFLAGS  = -g
+
+DEBUG_SYMBOLS_FFLAGS = -g -qsource 
+DEBUG_SYMBOLS_CFLAGS = -g
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -qsmp=omp:noauto
+OPENMP_CFLAGS  = -qsmp=omp:noauto
+OPENMP_LDFLAGS = -qsmp=omp:noauto
+
+
+###############
+# HDF5
+HDF5_HOME = /afs/mpa/project/vertex/software/@sys/hdf5_ser
+
+
+###############
+# MPI
+MPI_FC        = mpxlf90_r
+MPI_CC        = mpcc_r
+MPI_LD        = $(MPI_FC)
+MPI_FFLAGS    =
+MPI_CFLAGS    =
+MPI_LDFLAGS   =
+MPI_HDF5_HOME = /afs/mpa/project/vertex/software/@sys/hdf5_par
+USE_MPIF_H    =
+
+
+###############
+# Strict IEEE floating point conformance
+STRICT_FP_FFLAGS = 
+STRICT_FP_CFLAGS = 
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  = -I/afs/rzg/u/kud/include
+GSL_LDFLAGS = -lm -L/afs/rzg/u/kud/rs_aix53/lib -bstackpsize:64k -bdatapsize:64k -btextpsize:64k -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS = -lessl_r -lmassv -L/afs/ipp/@sys/lib
+VENDOR_LAPACK_LDFLAGS  = $(call unless_feature_set,VENDOR_VECLIBS,$(VENDOR_VECLIBS_LDFLAGS))
+
+
+###############
+# Perflib
+PERFLIB_LDFLAGS = /u/system/Power6/libs/perflib/lib/libperf.a -lpmapi 
+
+
+###############
+# MPITRACE
+MPITRACE_LDFLAGS = -lmpitrace
+
+
+###############
+# SCALASCA
+SCALASCA_FC_WRAPPER = scalasca -instrument
+SCALASCA_LD_WRAPPER = scalasca -instrument
+
+
+# vi: syntax=make expandtab

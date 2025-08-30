@@ -1,0 +1,129 @@
+# gfortran for amd64
+
+###############
+# Preprocessor
+CPPFLAGS += -DLINUX -DGNU_COMPILER
+
+
+###############
+# Fortran
+# default compiler
+FC = gfortran
+
+# universal fortran compiler flags
+FFLAGS = -fconvert=big-endian -pedantic -ffree-line-length-none -fimplicit-none -fdefault-real-8
+FFLAGS_FREE  = -ffree-form
+FFLAGS_FIXED = -ffixed-form
+
+
+###############
+# C
+# default compiler
+CC = gcc
+
+# universal c compiler flags
+CFLAGS = -m64 -Wall -Wstrict-prototypes
+
+
+###############
+# Flags for specific files:
+
+
+###############
+# Linking
+
+# default linker
+LD = gfortran
+
+# universal linker flags
+LDFLAGS =
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O3
+OPT_CFLAGS          = -O3
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -fbounds-check -ffpe-trap=invalid,zero,overflow -finit-real=snan
+DEBUG_CHECKS_CFLAGS   =
+
+DEBUG_SYMBOLS_FFLAGS    = -g3
+DEBUG_SYMBOLS_CFLAGS    = -g3
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -fopenmp
+OPENMP_CFLAGS  = -fopenmp
+OPENMP_LDFLAGS = -fopenmp
+
+
+###############
+# HDF5
+HDF5_HOME    = /home/bmueller/hdf5
+
+
+###############
+# MPI
+MPI_FC        = gfortran
+MPI_CC        = gcc
+MPI_LD        = gfortran
+MPI_FFLAGS    = -pthread -I/usr/lib64 -I/usr/include -I/usr/local/x86_64/intel/openmpi-1.6.4-psm/include
+MPI_CFLAGS    = -pthread -I/usr/lib64 -I/usr/local/x86_64/intel/openmpi-1.6.4-psm/include
+MPI_LDFLAGS   = -pthread -L/usr/lib64 -L/usr/local/x86_64/intel/openmpi-1.6.4-psm/lib -lmpi_f90 -lmpi_f77 -lmpi -lopen-rte -lopen-pal -ldl -Wl,--export-dynamic -lnsl -lutil -lm -ldl
+MPI_HDF5_HOME = /home/bmueller/hdf5
+
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    = 1
+
+
+###############
+# Strict IEEE floating point conformance
+STRICT_FP_FFLAGS = -mieee-with-inexact
+STRICT_FP_CFLAGS = -mieee-with-inexact
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  =
+GSL_LDFLAGS = -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS = #-L/afs/rzg/amd64_sles9/soft/intel/mkl/lib/em64t -lmkl_lapack -lmkl_em64t -Wl,-static -lguide -Wl,-dy -lpthread
+VENDOR_LAPACK_LDFLAGS  = $(call unless_feature_set,VENDOR_VECLIBS,$(VENDOR_VECLIBS_LDFLAGS))
+
+
+###############
+# Position independent code
+PIC_FFLAGS = -fPIC
+PIC_CFLAGS = -fPIC
+
+
+##############
+# F2PY
+F2PY_CCOMPILER = unix
+F2PY_FCOMPILER = gnu95
+
+
+##############
+# Function call trace
+CALL_TRACE_FFLAGS = -finstrument-functions
+CALL_TRACE_CFLAGS = -finstrument-functions
+EXPORT_DYNAMIC_LDFLAGS = -Wl,--export-dynamic
+
+
+# vi: syntax=make expandtab

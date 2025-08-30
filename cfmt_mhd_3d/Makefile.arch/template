@@ -1,0 +1,225 @@
+#
+# Template for ARCH sub makefile
+#
+# No conditionals or other complex logic should reside here,
+# only variable declarations
+
+###############
+# Preprocessor
+# Add machine specific flags to the preprocessor flags
+CPPFLAGS += -DSYSTEM_FLAG -DCOMPILER_FLAG
+
+
+###############
+# Fortran
+# default compiler
+FC =
+
+# universal fortran compiler flags
+FFLAGS =
+FFLAGS_FREE  =
+FFLAGS_FIXED =
+
+# Module files are assumed to be the lower-case fortran module
+# identifier plus ".mod". If this compiler thinks otherwise, specify
+# a perl function which gets the fortran module identifier and outputs
+# the mod-file name. Take care to escape $ characters for make
+FORTRAN_MOD_FILE_NAME = 'sub { my $$mod = shift; return "foo-$$mod.mod"; };'
+
+
+###############
+# C
+# default compiler
+CC =
+
+# universal c compiler flags
+CFLAGS =
+
+
+###############
+# Flags for specific files:
+#
+# There are three ways to alter the compilation of some individual files,
+# either by adding to or removing certain flags from the already present ones,
+# or by replacing them entirely. This is done by specifying
+#
+#   FFLAGS_ADD_somefile.f90
+#   FFLAGS_REMOVE_somefile.f90
+#   FFLAGS_REPLACE_somefile.f90
+#
+# or equivalently CFLAGS_*, CPPFLAGS_*, CUDACFLAGS_*, ....
+#
+# You can specify boht ADD and REMOVE, but obviously not any of them together
+# with REPLACE.
+#
+# Note that the files in the example above end with ".f90" or ".f", i.e. with
+# lower case "f", as you need to give the file the Makefile rule works on - and
+# its the .f90 and .f files that are compiled. For CPPFLAGS in contrast youe
+# would need to define CPPFLAGS_ADD_somefile.F90, as its the .F90 file that
+# gets preprocessed.
+#
+# Note that you can always access the actual flags by its Makefile variable
+# allowing you to do arbitrarily complex modifications of the compiler
+# arguments ala
+#
+# FFLAGS_REPLACE_somefile.F90 = $(some_function,$(FFLAGS))
+#
+# But think twice if this is really necessary and a good idea.
+
+
+###############
+# Linking
+
+# default linker
+LD =
+
+# universal linker flags
+LDFLAGS =
+
+
+###############
+#
+# Additional FEATURES follow
+#
+# For a feature called "FEATURENAME" you can set any of these variables
+# altering the behaviour of the compilation:
+#
+#   FEATURENAME_CPPFLAGS
+#   FEATURENAME_FFLAGS
+#   FEATURENAME_CFLAGS
+#   FEATURENAME_LDFLAGS
+#
+#   FEATURENAME_FC
+#   FEATURENAME_CC
+#   FEATURENAME_LD
+#
+#   FEATURENAME_FC_WRAPPER
+#   FEATURENAME_CC_WRAPPER
+#   FEATURENAME_LD_WRAPPER
+#
+#   FEATURENAME_HDF5_HOME
+#
+# If FEATURENAME is active (and see the comments in Makefile on how to do that)
+# the appropriate values get appended to the CCPFLAGS, FFLAGS, CFLAGS, and
+# LDFLAGS variables. If more than one feature adds values, they are appended in
+# lexicographical order of the feature's names.
+#
+# The default values of FC, CC, LD, and HDF5_HOME are replaced(!) should a
+# feature specify those, therefore no more than one active feature may specify
+# a compiler, linker or HDF5_HOME, an error is raised in case there is more
+# than one definiton active.
+#
+# The _WRAPPER variables are prepended to the current value of FC, CC, or LD
+# to allow specifying some wrapper programs (e.g. scalasca).
+#
+# In order to declare possible conflicts, one may specify
+#
+#   FEATURENAME_CONFLICT
+#
+# to a list of other features which should not be used together with this
+# feature. It is sufficient to specify this on one of the features
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O2
+OPT_CFLAGS          = -O2
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS  =
+DEBUG_CHECKS_CFLAGS  =
+
+DEBUG_SYMBOLS_FFLAGS =
+DEBUG_SYMBOLS_CFLAGS =
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -openmp
+OPENMP_CFLAGS  = -openmp
+OPENMP_LDFLAGS = -openmp
+
+
+###############
+# HDF5
+# note that we set a default HDF5_HOME here which could possibly
+# by altered by some other FEATURE. Typically you only need to set HDF5_HOME,
+# as defaults for HDF5_{F,C,LD}FLAGS are already set in INCLUDE
+HDF5_HOME    =
+HDF5_FFLAGS  = -I$(HDF5_HOME)/include
+HDF5_CFLAGS  = -I$(HDF5_HOME)/include
+HDF5_LDFLAGS = $(HDF5_HOME)/lib/libhdf5_fortran.a $(HDF5_HOME)/lib/libhdf5.a -lz -lm
+
+
+###############
+# MPI
+MPI_FC        =
+MPI_CC        =
+MPI_LD        =
+MPI_FFLAGS    =
+MPI_CFLAGS    =
+MPI_LDFLAGS   =
+MPI_HDF5_HOME =
+
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    =
+
+
+###############
+# Strict IEEE floating point conformance
+# Compiler may offer a slower, but strictly IEEE conforming floating point mode
+STRICT_FP_FFLAGS =
+STRICT_FP_CFLAGS =
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  =
+GSL_LDFLAGS = -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS =
+VENDOR_LAPACK_LDFLAGS  =
+
+
+###############
+# Marmot as an example where one would replace the compilers
+MARMOT_FC = marmotf90
+MARMOT_LD = marmotf90
+
+
+###############
+# SCALASCA as an example of a compiler wrapper.
+SCALASCA_FC_WRAPPER = scalasca -instrument
+SCALASCA_LD_WRAPPER = scalasca -instrument
+#
+# Note that it cannot be prescribed like marmot above, as just
+#
+#   SCALASCA_FC = scalasca
+#   SCALASCA_FFLAGS = -instrument
+#
+# because the option "-instrument" has to follow scalasca immediately, but the
+# FFLAGS are assembled from the different features in lexigraphical order. You
+# could of course call the feature AAA_SCALASCA,in order to assure that
+# "-instrument" is inserted first in FFLAGS - but FC_WRAPPER is perfectly
+# suited for this
+
+
+##############
+# F2PY arguments to --compiler and --fcompiler
+# note that this is not a feature to enable, just plain makefile variables that
+# are used in the python targets
+F2PY_FCOMPILER =
+F2PY_CCOMPILER =
+
+
+# vi: syntax=make expandtab

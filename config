@@ -1,0 +1,207 @@
+' ---------------------------------------------------------------------'
+' I   PROMETHEUS/VERTEX/COCONUT CONFIGURATION FILE                    I'
+' ---------------------------------------------------------------------'
+' calculation mode: possible options are.....' 'calculation'  'override'
+' collapse, bounce, postbounce, override.                              '
+' file name of initial progenitor model. ....' 'progenitor' '17mso.h5'
+' ... setup by rho-t-ye, rho-p-ye or rho-s-ye' 'setup_mode' 'rho-t-ye'
+' ---------------------------------------------------------------------'
+' job and output control                                               '
+'                                                                      '
+' model name as used in filenames ...........' 'modelname' 'hn_17'
+' maximum time for this run (in sec).........' 'cpumax'    35000
+' interpret as CPU (0) or WALL CLOCK (1) time' 'wcrem'     1
+' number of timesteps for this job ..........' 'nend'      500000
+' maximum time for this job (in sec) ........' 'tmax'      10.0
+' start new sequence, if  IRSTRT = 0 ........' 'irstrt'    0
+' possible values are 0 (new), 1 (restart), and 2 (restart afer remap) '
+' suffix of first output file ...............' 'suffix'    'aa'
+' store restart file after NRSTRT timesteps .' 'nrstrt'    2000
+' store restart file after TRSTRT seconds ...' 'trstrt'    4e-3
+' maximum number of timesteps between output ' 'nout'      400
+' maximum physical time between output.......' 'tout'      2e-3
+' stop when central density is reached ......' 'max_central_density' 0
+' stop at bounce time .......................' 'stop_bounce' 0
+' stop at bad resolution ....................' 'stop_bad_resolution' 0
+' duration after start before checking resol.' 'resolution_grace_period' 1e-3
+' print model with at least 10 points per    '
+' central density decade 0 (no), 1 (yes) ....' 'collapse_time_resolve' 0
+' print timestep information, if ITSTP.ne.0..' 'itstp'     0
+' at restart use temp or energy..............' 'rst_mode'  'temp'
+' use security file .........................' 'produc'    0
+' redirect stdout and stderr in MPI case ....' 'redirect'  1
+' deactivate writing of binary output/restart' 'deactivate_output'  0
+' deactivate writing of stdout...............' 'deactivate_stdout'  0
+' deactivate writing of control files........' 'deactivate_control_files'  0
+' print memory allocation information........' 'print_mem_alloc' 1
+' print information about MPI domains........' 'print_mpi_domain' 1
+'                                                                      '
+' ---------------------------------------------------------------------'
+' hydro: grid setup                                                    '
+'                                                                      '
+' dimensionality of the problem .............' 'nsdim'     3
+' number of grid points in x-direction ......' 'nx'        550
+' number of grid points in y-direction ......' 'ny'        128
+' number of grid points in z-direction ......' 'nz'        256
+' radius of inner grid boundary (in cm) .....' 'rib'       0.0
+' concentrate grid around mass-coord. (M_sol)' 'xmfrac'    0.45
+' radius of outer grid boundary (in cm)......' 'gridlx'    1.0e+10
+' grid length in y-direction (in PI).........' 'gridly'    1.0
+' grid length in z-direction (in PI).........' 'gridlz'    2.0
+' number of ALL nuclear species (incl. YE)...' 'qn'        21
+' number of species used in network..........' 'qn_network' 17
+'                                                                      '
+' hydro: coordinate system and boundary conditions                 '
+'                                                                      '
+' assume equatorial symmetry, if  ISYM = 1 ..' 'isym'      0
+' use Eulerian (0) or Lagrangian (1) hydro grid ' 'laghyd' 0
+' geometry selected for x-direction .........' 'igeomx'    2
+' possible values are: planar (0), radial cylindrical (1),             '
+' radial spherical (2), angular cylindrical (3),                       '
+' angular theta spherical (4), angular phi spherical(5)                '
+' geometry selected for y-direction .........' 'igeomy'    4
+' geometry selected for z-direction .........' 'igeomz'    5
+' inner boundary condition in x-direction ...' 'bndmnx'    1
+' possible values are: reflecting (1), flow out (2), flow in (3),      '
+' periodic (4), and any other (5)                                      '
+' outer boundary condition in x-direction ...' 'bndmxx'    5
+' inner boundary condition in y-direction ...' 'bndmny'    1
+' outer boundary condition in y-direction ...' 'bndmxy'    1
+' inner boundary condition in z-direction ...' 'bndmnz'    4
+' outer boundary condition in z-direction ...' 'bndmxz'    4
+'                                                                      '
+' hydro: area control                                               '
+'                                                                      '
+' threshold density for spherical inner core.' 'spherical_neutron_star' 0.
+' 0: no spherical neutron star, >0: density .'
+' number of separate areas in x-direction ...' 'are_nu'    2
+' number of last zone of 1. area in x-dir. ..' 'nxa'       48
+' grid resolution in y-direction.............' 'ioya'      128
+' grid resolution in z-direction.............' 'ioza'      256
+' number of last zone of 2. area in x-dir. ..' 'nxb'       550
+' grid resolution in y-direction.............' 'ioyb'      1
+' grid resolution in z-direction.............' 'iozb'      1
+' number of last zone of 3. area in x-dir. ..' 'nxc'       550
+' grid resolution in y-direction.............' 'ioyc'      1
+' grid resolution in z-direction.............' 'iozc'      1
+'                                                                      '
+' hydro: PPM parameters                                                '
+'                                                                      '
+' courant factor ............................' 'cfl'       0.7
+' number of iterations in Riemann solver ....' 'nriem'     5
+' artificial viscosity constant .............' 'cvisc'     0.1
+' cut-off value .............................' 'small'     1.e-10
+' cut-off value for density .................' 'smlrho'    1.e-5
+' cut-off value for pressure ................' 'smallp'    1.e+10
+' cut-off value for energy ..................' 'smalle'    1.e+10
+' cut-off value for velocity ................' 'smallu'    1.e-10
+' cut-off value for abundances ..............' 'smallx'    1.e-10
+' use Godunov method, if  IGODU = 1 .........' 'igodu'     0
+'                                                                      '
+' ---------------------------------------------------------------------'
+' timestep control                                                     '
+'                                                                      '
+' initial size of the timestep (in sec)......' 'dtini'     1.e-6
+' minimum size of hydro timestep (in sec) ...' 'dtmin'     4.e-17
+' maximum size of timestep (in sec) .........' 'dtmax'     2e-5
+' maximum timestep with subcycling (in sec)..' 'dtmaxx'    2e-5
+' minimum size of transport timestep (IN SEC)' 'dtmn_rt'   1.e-15
+' interval for summary output in .tim-file ..' 'intout'    1
+'                                                                      '
+' ---------------------------------------------------------------------'
+' perturbation control                                                 '
+'                                                                      '
+' perturb initial model, if set to 1 ........' 'noise'     1
+' amplitude of random perturbation(e.g.0.001)' 'ampl'      1e-4
+'                                                                      '
+' ---------------------------------------------------------------------'
+' gravity treatment                                                    '
+'                                                                      '
+' general rel. potential, if i_grv = 1/2(2D)........' 'i_grv'     1
+' 0=Newtonian,1=GR (monopol),2= GRapprox for 2d                        '
+'                                                   ' 'gr_approx' 1
+' 1=new (Marek et al. 2006), 2=wrong order of neutrino'
+'  pressure terms                                   '
+' enforce spherical potential ......................' 'enforce_spherical_potential' 0
+' gen. relativistic transp. (0=off/1=on/-1=CFC).....' 'i_grtr'    -1
+' ---------------------------------------------------------------------'
+' transport usage control                                              '
+'                                                                      '
+' use neutrino transport (0=OFF/1=ON)...............' 'p_ntr'     0
+' use neutrino backreactions (0=off/1=on)...........' 'p_nbk'     0
+' restart mode for transport: (2=RESET TIME[step])..' 'irst_ra'   1
+'                                                                      '
+' transport: grid setup                                                '
+'                                                                      '
+' number of neutrino species (isma) ................' 'isma'       3
+' number of energy bins (iemax) ....................' 'ner'       12
+' type of energy grid for new run, 0: log, 1: linlog' 'geoen'     0
+' transp. grid radius for new run, use hydro if <= 0' 'gridlx_t'  1e10
+' number of radial transport zones...... ...........' 'nrad'      283
+' number of shells penetrating IB (-cmin) ..........' 'cmin'      20
+' J-diffusity (0=off, 1=old, 2=new, 3=only in shock.' 'jvisc'     3
+' multid ralag........................... ..........' 'multid'      0
+' (needed if a Lagrangian transport is used)........'
+' number of angular rays in theta direction ........' 'nymom'     1
+' number of angular rays in phi direction......... .' 'nzmom'     1
+' use spherical Eddington factor....................' 'spher_edd' 0
+'                                                                      '
+' transport accuracy control                                           '
+'                                                                      '
+' sigma1 ....................................' 'sigma1'    9999.
+' SIGMA2 (mean     temporal changes).........' 'sigma2'    0.09
+' SIGMA3 (maximum  temporal changes).........' 'sigma3'    0.17e2
+' MAX.NO. OF ME-BTE-ITERATIONS ..............' 'itanz'     14
+' ACCURACY FOR ME-BTE-ITERATION .............' 'epsit'     1.E-7
+' skip nsiout outputs of the spec. intensit. ' 'nsiout'    10000
+'                                                                      '
+' transport neutrino rates                                             '
+'                                                                      '
+' use rates from KJT ........................' 'kjt'         1
+' use tabulated KJT rates....................' 'kjttable'    0
+' use nu-nu rates ...........................' 'nunu'        1
+' use LMS rates .............................' 'lmsrates'    1
+' use LMS rates with spectra ................' 'lmsspectra'  0
+' use qfitting value together with spectra ..' 'qfit'        0
+' use old implementation of LMS rates .......' 'lmsold'      0
+' use nucleus information from LMS table ....' 'lmsheavy'    0
+' use electron captures in low density eos ..' 'ec_low_den'  0
+' (at the moment this is only done in NSE )..'
+' use ion-ion correlations according to ITOH ' 'itoh'        0
+' together with ITOH use assemble average ...' 'itohgamma'   0
+' take polarisation at scattering (C_los) ...' 'clos'        0
+' consider ISN rates ........................' 'isnrates'    0
+' use nucleus information together with ISN .' 'isnheavy'    0
+' use bremstrahlung..........................' 'brems'       1
+' use nickel rates ..........................' 'nickelrates' 0
+' ---------------------------------------------------------------------'
+'                                                                      '
+' eos setup control and nuclear burning                                '
+'                                                                      '
+' density between LS EoS and ThJ Eos [g/cc]..' 'tj_ls_rho'  6e8
+' density between LS EoS and Wolfflow EoS....' 'wolff_ls_rho' -1
+' density between Wolfflow EoS and ThJ Eos...' 'tj_wolff_rho' -1
+' switch lsrolo at first EoS call? (0=N/1=Y).' 'eos_sw'       0
+' Restmass version to use....................' 'restmass'     0
+' Low density nse EoS to use ................' 'lowdennse'    17
+' use nuclear burning network (0=no,1=yes)...' 'use_network'  0
+' if network is not used, you can set here the flashing'
+'      --- flashing of C12 (0=no, 1=yes).....' 'flash_c'      1
+'      --- flashing of O16 (0=no, 1=yes).....' 'flash_o'      1
+'      --- flashing of Si28 (0=no, 1=yes)....' 'flash_si'     1
+' ---------------------------------------------------------------------'
+'                                                                      '
+' parallelisation setup (does not work yet)                            '
+'                                                                      '
+' parallelisation via OpenMP over energy bins' 'omp_energy' 0
+' parallelisation via OpenMP over rays.......' 'omp_rays'   1
+' use OpenMP parallises matrix solver........' 'omp_matrix' 0
+' ---------------------------------------------------------------------'
+'                                                                      '
+' special cases parameters                                             '
+' mass of the central neutron star [g] ......' 'pmass'     0.0
+' file with the initial radiat. field (or no)' 'rfile'     'no'
+' VERSION NUMBER OF _HYDRO_ OUTPUT...........' 'ihvers'    0
+' VERSION NUMBER OF _TRANSPORT_ OUTPUT.......' 'irvers'    0
+'                                                                      '
+'======================================================================'

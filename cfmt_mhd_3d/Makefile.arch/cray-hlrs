@@ -1,0 +1,132 @@
+# CRAY FTN compiler
+# Template for ARCH sub makefile
+
+###############
+# Preprocessor
+# Add machine specific flags to the preprocessor flags
+CPPFLAGS += -DLINUX -DJUROPA -DINTEL_COMPILER -DSGE_QUEUE
+
+
+###############
+# Fortran
+# default compiler
+FC = ftn
+FORTRAN_MOD_FILE_NAME = 'sub { my $$mod = shift; return uc($$mod) . ".mod"; }'
+
+# universal fortran compiler flags
+FFLAGS = -DMYTIME_ -hbyteswapio -e m -O modinline -e a -e C
+FFLAGS_FREE  = -f free
+FFLAGS_FIXED = -f fixed
+FORTRAN_MOD_FILE_NAME = 'sub { my $$mod = shift; return uc($$mod) . ".mod"; }'
+
+###############
+# C
+# default compiler
+CC = cc
+
+# universal c compiler flags
+CFLAGS =
+
+
+###############
+# Flags for specific files:
+
+
+###############
+# Linking
+
+# default linker
+LD =  ftn
+
+# universal linker flags
+LDFLAGS = -hbyteswapio
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O3
+OPT_CFLAGS          = -O2
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -g -K trap=denorm,divz,fp,inexact,inv,ovf,unf
+#-fbounds-check -ffpe-trap=invalid,zero,overflow,underflow,precisio
+DEBUG_CHECKS_CFLAGS   = -g
+
+DEBUG_SYMBOLS_FFLAGS    = -g
+DEBUG_SYMBOLS_CFLAGS    = -g
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -homp
+OPENMP_CFLAGS  = -homp
+OPENMP_LDFLAGS = -homp
+
+
+###############
+# HDF5
+HDF5_HOME = $(HDF5_DIR)
+#HDF5_HOME = /opt/cray/hdf5-parallel/1.8.5.0/hdf5-parallel-cce
+
+###############
+# MPI
+MPI_FC        = ftn
+MPI_CC        = cc
+MPI_LD        = ftn
+MPI_FFLAGS    = #-fPIC -I/afs/rzg/.cs/hdf5/1.8.4-patch1/amd64_sles11/intel/11.1/impi/4.0.0/include
+MPI_CFLAGS    = #a-I/afs/rzg/.cs/hdf5/1.8.4-patch1/amd64_sles11/intel/11.1/impi/4.0.0/include
+MPI_LDFLAGS   =
+MPI_HDF5_HOME = #/afs/rzg/.cs/hdf5/1.8.4-patch1/amd64_sles11/intel/11.1/impi/4.0.0
+
+
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    =
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  = #a-I/afs/rzg/common/soft/gsl/1.14/@sys/include/
+GSL_LDFLAGS = #a-L/afs/rzg/common/soft/gsl/1.14/@sys/lib -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+#VENDOR_LAPACK_LDFLAGS  = -lfast_mv -lsci_mc12 -L /cray/css/u7/kjt/opt/profiler -lprofiler -lhugetlbfs
+#VENDOR_LAPACK_LDFLAGS  = -lfast_mv -lsci_mc12  -lhugetlbfs
+VENDOR_LAPACK_LDFLAGS  = -L/opt/xt-libsci/11.0.03/cray/74/interlagos/lib # /cray/css/u7/kjt/opt/profiler -lprofiler -lhugetlbfs
+
+#VENDOR_LAPACK_LDFLAGS  = -lhugetlbfs
+#VENDOR_LAPACK_LDFLAGS  = $(call unless_feature_set,VENDOR_VECLIBS,$(VENDOR_VECLIBS_LDFLAGS))
+
+
+###############
+# PERFLIB
+PERFLIB_LDFLAGS =
+
+###############
+# MPITRACE
+MPITRACE_LDFLAGS =
+
+###############
+# Intels traceanalyser
+#TRACE_ANALYSER_LDFLAGS =
+TRACE_ANALYSER_LDFLAGS =
+
+###############
+# SCALASCA
+SCALASCA_FC_WRAPPER = scalasca -instrument
+SCALASCA_LD_WRAPPER = scalasca -instrument
+
+
+# vi: syntax=make expandtab

@@ -1,0 +1,112 @@
+# Magnus
+
+###############
+# Preprocessor
+# Add machine specific flags to the preprocessor flags
+CPPFLAGS += -DLINUX -DJUROPA  -DINTEL_COMPILER -DHDF5_1_10
+
+
+###############
+# Fortran
+# default compiler
+FC = ftn 
+
+# universal fortran compiler flags
+FFLAGS = -convert big_endian -r8  -fPIC #-mcmodel=medium #-opt-report=4 # -shared-intel
+FFLAGS_FREE  = -FR
+FFLAGS_FIXED = -FI
+
+
+###############
+# C
+# default compiler
+CC = cc
+
+# universal c compiler flags
+CFLAGS = -fPIC #-mcmodel=medium
+
+
+###############
+# Flags for specific files:
+FFLAGS_REMOVE_momeq.f90 = -O2
+FFLAGS_ADD_momeq.f90 = -O2 -fp-model precise -fp-model source
+FFLAGS_REMOVE_transp.f90 = -O2
+FFLAGS_ADD_transp.f90 = -O2 -fp-model precise -fp-model source
+
+###############
+# Linking
+
+# default linker
+LD = ftn
+
+# universal linker flags
+LDFLAGS = -fPIC
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O2 # -ip -xSSE4.2
+OPT_CFLAGS          = -O2
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -g -C -traceback -zero -fpe0 -CA -CB  -check all,noarg_temp_created
+DEBUG_CHECKS_CFLAGS   = -g
+
+DEBUG_SYMBOLS_FFLAGS    = -g -C -traceback -debug all
+DEBUG_SYMBOLS_CFLAGS    = -g -C -traceback -debug all
+
+DEBUG_CHECKS_LDFLAGS   = -g -C -traceback -zero -fpe0 -CA -CB  -check all,noarg_temp_created
+DEBUG_SYMBOLS_LDFLAGS   = -g -C -traceback -debug all
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -openmp
+OPENMP_CFLAGS  = -openmp
+OPENMP_LDFLAGS = -openmp
+
+###############
+# HDF5
+#HDF5_HOME =  # HDF5 does not work we have to build it/usr/local/hdf5-1.8.5
+HDF5_HOME = 
+
+
+###############
+# MPI
+MPI_FC        = ftn 
+MPI_CC        = cc 
+MPI_LD        = ftn
+MPI_FFLAGS    = #-I/opt/cray/pe/mpt/7.7.0/gni/mpich-intel/16.0/include/
+MPI_CFLAGS    = #-I/opt/cray/pe/mpt/7.7.0/gni/mpich-intel/16.0/include/
+MPI_LDFLAGS   = 
+MPI_HDF5_HOME = $(HDF5_DIR)
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    = 0
+
+###############
+# GNU scientific library
+GSL_CFLAGS  = -I/pawsey/cle60up05/devel/PrgEnv-intel/6.0.4/intel/17.0.4.196/haswell/gsl/2.3/include
+GSL_LDFLAGS = /pawsey/cle60up05/devel/PrgEnv-intel/6.0.4/intel/17.0.4.196/haswell/gsl/2.3/lib/libgsl.a -lm /pawsey/cle60up05/devel/PrgEnv-intel/6.0.4/intel/17.0.4.196/haswell/gsl/2.3/lib/libgslcblas.a
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS = $(MKL_LIBS) #-liomp5 -lpthread
+VENDOR_LAPACK_LDFLAGS  = $(call unless_feature_set,VENDOR_VECLIBS,$(VENDOR_VECLIBS_LDFLAGS))
+
+
+EXPORT_DYNAMIC_LDFLAGS = -Wl,--export-dynamic
+
+
+# vi: syntax=make expandtab

@@ -1,0 +1,111 @@
+# gfortran for Power6!
+
+###############
+# Preprocessor
+
+CPPFLAGS += -DIBM -DGNU_COMPILER
+
+
+###############
+# Fortran
+# default compiler
+FC = gfortran
+
+# universal fortran compiler flags 
+FFLAGS = -maix64 -fconvert=big-endian -pedantic -ffree-line-length-none -fimplicit-none -fdefault-real-8 -Wall
+FFLAGS_FREE  = -ffree-form
+FFLAGS_FIXED = -ffixed-form
+
+
+###############
+# C
+# default compiler
+CC = gcc
+
+# universal c compiler flags
+CFLAGS = -maix64 -Wall -Wstrict-prototypes
+
+
+###############
+# Flags for specific files:
+
+
+###############
+# Linking
+
+# default linker
+LD = gfortran
+
+# universal linker flags
+LDFLAGS = -maix64
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O3
+OPT_CFLAGS          = -O3
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS  = -g -fbounds-check -ffpe-trap=invalid,zero,overflow,underflow,precision
+DEBUG_CHECKS_CFLAGS  = -g
+
+DEBUG_SYMBOLS_FFLAGS = -g
+DEBUG_SYMBOLS_CFLAGS = -g
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -fopenmp
+OPENMP_CFLAGS  = -fopenmp
+OPENMP_LDFLAGS = -fopenmp
+
+
+###############
+# HDF5
+HDF5_HOME = /afs/mpa/project/vertex/software/@sys/hdf5/1.8.5p1-serial-gfortran
+
+
+###############
+# MPI
+MPI_FC        = 
+MPI_CC        = 
+MPI_LD        = 
+MPI_FFLAGS    = 
+MPI_CFLAGS    = 
+MPI_LDFLAGS   = 
+MPI_HDF5_HOME = 
+
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    =
+
+
+###############
+# Strict IEEE floating point conformance
+STRICT_FP_FFLAGS = -mieee-with-inexact
+STRICT_FP_CFLAGS = -mieee-with-inexact
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  =
+GSL_LDFLAGS = -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS = -lessl_r -lmassv -L/afs/ipp/@sys/lib
+VENDOR_LAPACK_LDFLAGS  = $(call unless_feature_set,VENDOR_VECLIBS,$(VENDOR_VECLIBS_LDFLAGS))
+
+
+# vi: syntax=make expandtab

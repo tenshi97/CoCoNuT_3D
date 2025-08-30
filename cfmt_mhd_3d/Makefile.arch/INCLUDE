@@ -1,0 +1,20 @@
+# Generic declarations
+
+# Interdependencies
+OPT_CONFLICTSWITH = NO_OPT
+
+ifeq ($(ARCH),gadi)
+     HDF5_FDIR = ompi3/Intel
+     HDF5_CDIR = ompi3
+endif
+
+
+# HDF5 is rather generic
+HDF5_FFLAGS  = -I$(HDF5_HOME)/include
+HDF5_CFLAGS  = -I$(HDF5_HOME)/include
+HDF5_LDFLAGS = $(HDF5_HOME)/lib/$(HDF5_FDIR)/libhdf5_fortran.a $(HDF5_HOME)/lib/$(HDF5_CDIR)/libhdf5.a -lz -lm
+
+# Replacement feature to link shared HDF5 libs
+HDF5_SHARED_FFLAGS  = -I$(HDF5_HOME)/include
+HDF5_SHARED_CFLAGS  = -I$(HDF5_HOME)/include
+HDF5_SHARED_LDFLAGS = -Wl,-L$(HDF5_HOME)/lib/GNU -Wl,-R$(HDF5_HOME)/lib/GNU -lhdf5_fortran -lhdf5 -lz -lsz -lm

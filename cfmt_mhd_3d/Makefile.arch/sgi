@@ -1,0 +1,5 @@
+# This is a dummy file as there are lots and lots of
+#   #ifdef SGI
+# statements in the code. We should decide what to do with them
+
+CPPFLAGS += -DSGI

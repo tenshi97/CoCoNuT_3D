@@ -1,0 +1,123 @@
+# generic MPA i368 gfortran
+
+###############
+# Preprocessor
+CPPFLAGS += -DLINUX -DGNU_COMPILER
+
+
+###############
+# Fortran
+FC = gfortran
+
+# universal fortran compiler flags 
+FFLAGS = -fconvert=big-endian -pedantic -ffree-line-length-none -fimplicit-none -fdefault-real-8
+FFLAGS_FREE  = -ffree-form
+FFLAGS_FIXED = -ffixed-form
+
+
+###############
+# C
+CC = gcc
+
+# universal c compiler flags
+CFLAGS =
+
+
+###############
+# Flags for specific files:
+
+
+###############
+# Linking
+
+# default linker
+LD = gfortran
+
+# universal linker flags
+LDFLAGS =
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O3
+OPT_CFLAGS          = -O2
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -g -fbounds-check -ffpe-trap=invalid,zero,overflow,underflow,precision
+DEBUG_CHECKS_CFLAGS   = -g
+
+DEBUG_SYMBOLS_FFLAGS    = -g
+DEBUG_SYMBOLS_CFLAGS    = -g
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -openmp
+OPENMP_CFLAGS  = -openmp
+OPENMP_LDFLAGS = -openmp
+
+
+###############
+# HDF5
+HDF5_HOME = 
+
+
+###############
+# MPI
+MPI_FC        =
+MPI_CC        =
+MPI_LD        =
+MPI_FFLAGS    =
+MPI_CFLAGS    =
+MPI_LDFLAGS   =
+MPI_HDF5_HOME = 
+USE_MPIF_H    =
+
+
+###############
+# Strict IEEE floating point conformance
+STRICT_FP_FFLAGS = -mieee-with-inexact
+STRICT_FP_CFLAGS = -mieee-with-inexact
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  =
+GSL_LDFLAGS = -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS =
+VENDOR_LAPACK_LDFLAGS  =
+
+
+###############
+# Position independent code
+PIC_FFLAGS = -fpic
+PIC_CFLAGS = -fpic
+
+
+##############
+# F2PY
+F2PY_CCOMPILER = unix
+F2PY_FCOMPILER = gnu95
+
+
+##############
+# Function call trace
+CALL_TRACE_FFLAGS = -finstrument-functions
+CALL_TRACE_CFLAGS = -finstrument-functions
+EXPORT_DYNAMIC_LDFLAGS = -Wl,--export-dynamic
+
+
+# vi: syntax=make expandtab

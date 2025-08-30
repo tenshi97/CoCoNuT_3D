@@ -1,0 +1,15 @@
+
+#if !(defined(result) && defined(index))
+#error
+#endif
+     result(i) = &
+            wr0(i) * ( wt0(i) * ( wy0(i)*eos_cast(intrpl_data(i,index,1))       &
+                                + wy1(i)*eos_cast(intrpl_data(i,index,2)) )     &
+                     + wt1(i) * ( wy0(i)*eos_cast(intrpl_data(i,index,3))       &
+                                + wy1(i)*eos_cast(intrpl_data(i,index,4)) ))    &
+          + wr1(i) * ( wt0(i) * ( wy0(i)*eos_cast(intrpl_data(i,index,5))       &
+                                + wy1(i)*eos_cast(intrpl_data(i,index,6)) )     &
+                     + wt1(i) * ( wy0(i)*eos_cast(intrpl_data(i,index,7))       &
+                                + wy1(i)*eos_cast(intrpl_data(i,index,8)) ))
+#undef result
+#undef index

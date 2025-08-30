@@ -1,0 +1,125 @@
+# BlueGene at RZG
+
+###############
+# Preprocessor
+# Add machine specific flags to the preprocessor flags
+CPPFLAGS += -DIBM -DIBM_COMPILER -UIBM_OPT -DBLUEGENE
+
+
+###############
+# Fortran
+# default compiler
+FC = xlf90_r
+
+# universal fortran compiler flags 
+FFLAGS = -qreport=smplist:hotlist -qsource -qrealsize=8 -qdpc #-bloadmap #:check.list 
+FFLAGS_FREE  = -qfree=f90
+FFLAGS_FIXED = -qfixed
+
+
+###############
+# C
+# default compiler
+CC =
+
+# universal c compiler flags
+CFLAGS = -I/bgsys/drivers/ppcfloor/arch/include -I/bgsys/drivers/ppcfloor/arch/include/spi
+
+
+###############
+# Flags for specific files:
+FFLAGS_REMOVE_himodyn.F = -qnohot -qstrict
+FFLAGS_REMOVE_setinf.F  = -qnohot -qstrict
+FFLAGS_REMOVE_rady.F    = -qnohot -qstrict
+FFLAGS_REMOVE_momeq.F   = -qnohot -qstrict
+
+
+###############
+# Linking
+
+# default linker
+LD = xlf90_r
+
+# universal linker flags
+LDFLAGS = -L/bgsys/drivers/V1R4M1_460_2009-091110P/ppc/runtime/SPI -Wl,-rpath,/bgsys/drivers/V1R4M1_460_2009-091110P/ppc/runtime/SPI -lSPI.cna # -blpdata
+
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O3 -qhot -qnoipa -qnosave -qmaxmem=-1 -qarch=450d -qtune=450
+OPT_CFLAGS          = -O2
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS  = -g -C -qsigtrap -qflttrap=overflow:zerodivide:invalid:enable \
+                       -qlanglvl=90pure -qsource -qextchk -qwarn64 -qinitauto=FF
+DEBUG_CHECKS_CFLAGS  = -g
+
+DEBUG_SYMBOLS_FFLAGS = -g -qsource 
+DEBUG_SYMBOLS_CFLAGS = -g
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -qsmp=omp:noauto -qthreaded
+OPENMP_CFLAGS  = -qsmp=omp:noauto -qthreaded
+OPENMP_LDFLAGS = -qsmp=omp:noauto -qthreaded
+
+
+###############
+# HDF5
+HDF5_HOME =
+
+
+###############
+# MPI
+MPI_FC        = /bgsys/drivers/ppcfloor/comm/bin/mpixlf90_r 
+MPI_CC        = /bgsys/drivers/ppcfloor/comm/bin/mpixlc
+MPI_LD        = $(MPI_FC)
+MPI_FFLAGS    =
+MPI_CFLAGS    =
+MPI_LDFLAGS   =
+MPI_HDF5_HOME = /u/system/BlueGene/libs/hdf5-1.8.4p1
+
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    = 1
+
+
+###############
+# GNU scientific library
+GSL_CFLAGS  = 
+GSL_LDFLAGS = -lm -lgsl -lgslcblas
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS = -lmassv
+VENDOR_LAPACK_LDFLAGS  = /opt/ibmmath/essl/4.4/lib/libesslbg.a 
+
+
+###############
+# Marmot as an example where one would replace the compilers
+MARMOT_FC = marmotf90
+MARMOT_LD = marmotf90
+
+###############
+# Perflib
+PERFLIB_LDFLAGS =  -L/usr/local/lib -lperf -lperfhpm
+
+###############
+# MPITRACE
+MPITRACE_LDFLAGS = /usr/local/ihpct-2010.04.12/lib/libmpitrace.a /usr/local/ihpct-2010.04.12/lib/liblicense.a 
+
+
+# vi: syntax=make expandtab

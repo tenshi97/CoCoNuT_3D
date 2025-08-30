@@ -1,0 +1,108 @@
+# NEC sx8 at HLRS
+known_features += NEC_FTRACE
+DEFAULT_FEATURES += NEC_FTRACE
+
+###############
+# Preprocessor
+CPPFLAGS += -DNEC -DNEC_COMPILER
+
+
+###############
+# Fortran
+FC = sxf90
+FFLAGS = -sx8 -size_t64 -Wf'-L fmtlist transform map' -f2003
+FFLAGS_FREE  = -f4
+FFLAGS_FIXED = -f0
+
+
+###############
+# C
+CC = sxcc
+CFLAGS = -sx8 -size_t64
+
+
+###############
+# Flags for specific files
+
+
+###############
+# Linking
+LD = sxf90
+LDFLAGS = -sx8 -size_t64
+
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -C hopt -Wf'-pvctl vr256 fullmsg noassume loopcnt=100000' \
+                      -pi auto line=10000 noexp=fun_ele noexp=error_handler # incdir -I. #exp=mmult,factor,backsub
+OPT_CFLAGS          = -C hopt -pi auto
+
+NO_OPT_FFLAGS       = -C debug
+NO_OPT_CFLAGS       = -C debug
+
+
+##############
+# Summary "ftrace"
+NEC_FTRACE_FFLAGS  = -ftrace
+NEC_FTRACE_CFLAGS  = -ftrace
+NEC_FTRACE_LDFLAGS = -ftrace
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -eC -g
+DEBUG_CHECKS_CFLAGS   = -g
+
+DEBUG_SYMBOLS_FFLAGS    = -g
+DEBUG_SYMBOLS_CFLAGS    = -g
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -P openmp
+OPENMP_CFLAGS  = -P openmp
+OPENMP_LDFLAGS = -P openmp
+
+
+###############
+# HDF5
+HDF5_HOME = /nfs/home10/HLRS/xap/xaploren/sys/sx8-nec-superux/hdf5-1.8.4p1-serial
+
+
+###############
+# MPI
+MPI_FC        = sxmpif90
+MPI_CC        =
+MPI_LD        = $(MPI_FC)
+MPI_FFLAGS    =
+MPI_CFLAGS    =
+MPI_LDFLAGS   =
+MPI_HDF5_HOME = 
+USE_MPIF_H    =
+
+
+###############
+# Strict IEEE floating point conformance
+STRICT_FP_FFLAGS = 
+STRICT_FP_CFLAGS = 
+
+
+###############
+# GNU scientific library
+gsl_config = /nfs/home10/HLRS/xap/xaploren/sys/sx8-nec-superux/gsl-1.14/bin/gsl-config
+GSL_CFLAGS  = $(shell $(gsl_config) --cflags)
+GSL_LDFLAGS = $(shell $(gsl_config) --libs)
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS =
+VENDOR_LAPACK_LDFLAGS  = -llapack -lblas
+
+
+# vi: syntax=make expandtab

@@ -1,0 +1,99 @@
+# JUROPA
+
+###############
+# Preprocessor
+# Add machine specific flags to the preprocessor flags
+CPPFLAGS += -DLINUX  -DJUROPA -DINTEL_COMPILER
+
+
+###############
+# Fortran
+# default compiler
+FC = ifort
+
+# universal fortran compiler flags 
+FFLAGS = -convert big_endian -r8 -mcmodel=medium -shared-intel  -override-limits
+FFLAGS_FREE  = -FR
+FFLAGS_FIXED = -FI
+
+
+###############
+# C
+# default compiler
+CC = icc
+
+# universal c compiler flags
+CFLAGS = -mcmodel=medium
+
+
+###############
+# Flags for specific files:
+FFLAGS_ADD_momeq.f90  = -fp-model precise -fp-model source
+FFLAGS_ADD_transp.f90 = -fp-model precise -fp-model source
+
+
+###############
+# Linking
+
+# default linker
+LD = ifort
+
+# universal linker flags
+LDFLAGS =
+
+
+###############
+# Additional FEATURES follow
+
+
+###############
+# Optimization
+OPT_FFLAGS          = -O2 # -ip -xSSE4.2
+OPT_CFLAGS          = -O2
+
+NO_OPT_FFLAGS       = -O0
+NO_OPT_CFLAGS       = -O0
+
+
+###############
+# Debugging
+DEBUG_CHECKS_FFLAGS   = -g -C -traceback -zero -fpe0 -CA -CB  -check all,noarg_temp_created -override-limits 
+DEBUG_CHECKS_CFLAGS   = -g
+
+DEBUG_SYMBOLS_FFLAGS    = -g
+DEBUG_SYMBOLS_CFLAGS    = -g
+
+
+###############
+# OpenMP
+OPENMP_FFLAGS  = -openmp
+OPENMP_CFLAGS  = -openmp
+OPENMP_LDFLAGS = -openmp
+
+###############
+# HDF5
+HDF5_HOME = $(HOME)/sys/hdf5/hdf5-1.8.5p1-medium/serial
+
+
+###############
+# MPI
+MPI_FC        = mpif90
+MPI_CC        = mpicc
+MPI_LD        = mpif90
+MPI_FFLAGS    =
+MPI_CFLAGS    =
+MPI_LDFLAGS   =
+MPI_HDF5_HOME = $(HOME)/sys/hdf5/hdf5-1.8.5p1-medium/parallel
+
+# Special variable: Set to 1 if one has to 'include "mpif.h"' on the
+# architecture instead of 'use mpi'
+USE_MPIF_H    =
+
+
+###############
+# Optimized vendor libraries
+VENDOR_VECLIBS_LDFLAGS = -L$(MKLROOT)/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_lapack -lmkl_core -lguide -liomp5 -lpthread
+VENDOR_LAPACK_LDFLAGS  = $(call unless_feature_set,VENDOR_VECLIBS,$(VENDOR_VECLIBS_LDFLAGS))
+
+
+# vi: syntax=make expandtab
