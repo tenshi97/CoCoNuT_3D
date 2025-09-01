@@ -62,6 +62,9 @@ c     ==================================================================
       USE gr_tstep
       USE cons_check
       USE renormalize
+
+      USE tracer
+      USE tracer_cfc
 #if 0
       USE timmes_network
 #endif

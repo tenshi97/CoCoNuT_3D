@@ -204,4 +204,9 @@
 ' VERSION NUMBER OF _HYDRO_ OUTPUT...........' 'ihvers'    0
 ' VERSION NUMBER OF _TRANSPORT_ OUTPUT.......' 'irvers'    0
 '                                                                      '
+' ---------------------------------------------------------------------'
+'                                                                      '
+' tracer module parameters                                             '
+' tracer particles per task initially.......' 'trpp'       360
 '======================================================================'
+

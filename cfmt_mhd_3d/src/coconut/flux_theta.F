@@ -39,9 +39,9 @@ c     ------------------------------------------------------------------
       USE hydro_primitives_cfc
 
       USE shock_cfc
-
+      
       use configure
-
+      
       IMPLICIT NONE
 
       integer (kind=ik) :: i, j, jk, k, l, ll

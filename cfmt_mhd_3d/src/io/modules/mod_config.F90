@@ -223,6 +223,7 @@ module configure
     logical           :: isn_heavy                          !x!> use nucleus information together with ISN
     logical           :: brems                              !x!> use bremstrahlung
     logical           :: nickelrates                        !x!> use nickel rates
+    integer(kind=ik)  :: trpp                               !x!> tracer num per particle
 #ifdef WRITE_BINARY_OUTPUT
 !PERL my @type_defs = @_lines[0 .. $_line_number];
 #endif
