@@ -63,8 +63,8 @@ c     ==================================================================
       USE cons_check
       USE renormalize
 
-      USE tracer
-      USE tracer_cfc
+c      USE tracer
+c      USE tracer_cfc
 #if 0
       USE timmes_network
 #endif
@@ -260,6 +260,10 @@ ccc   set old time steps as dummy on the first time slice
 #if 0
       CALL init_network
 #endif
+c      if (.not.restart) then
+c         call allocate_tracer_arrays(.false.)
+c         call tracer_position_init
+c      end if
 
       return
 
