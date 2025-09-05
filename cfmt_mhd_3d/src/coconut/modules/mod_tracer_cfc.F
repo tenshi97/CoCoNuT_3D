@@ -26,7 +26,13 @@ c     ============================================================
       integer (kind=ik), allocatable :: tracer_id(:)
       integer (kind=ik), allocatable ::tracer_proc(:)
       integer (kind=ik) :: qyrays_t,qzrays_t
-      integer (kind=ik) n_ts,n_te
+      integer (kind=ik) :: n_ts,n_te
+      INTEGER (KIND=ik) :: testcoords (2)
+      INTEGER (KIND=ik) :: testmycoords (2)
+      INTEGER (KIND=ik) :: testdims (2)
+      LOGICAL :: testperiods (2)
+      INTEGER (KIND=ik) :: testierr
+
       CONTAINS
 c     ============================================================
 
@@ -64,10 +70,17 @@ c     &  trnum_rstrt
       tracer_total = tracer_pp * nprocs
       qyrays_t = n_e-n_s+1
       qzrays_t = o_e-o_s+1
+
+      CALL MPI_Cart_get (cart_comm, 2_ik, testdims, testperiods,
+     &     testmycoords, testierr)
       WRITE(7777,*) "INIT INFO:tracer per process:",tracer_pp
       WRITE(7777,*) "INIT INFO:tracer total",tracer_total
       WRITE(7777,*) "INIT INFO:y-rays total",qyrays_t
       WRITE(7777,*) "INIT INFO:z-rays total",qzrays_t
+      WRITE(7777,*),"NLOC,OLOC,NPROCS,MYPROC",n_loc,o_loc,nprocs  
+     &  ,myproc
+      WRITE(7777,*) "dims[0],dims[1],mycoord[0],mycoord[1]",
+     & testdims(1),testdims(2),testmycoords(1),testmycoords(2)
       allocate(
      &  pos_tracer_r(tracer_num),
      &  pos_tracer_r_old(tracer_num),
