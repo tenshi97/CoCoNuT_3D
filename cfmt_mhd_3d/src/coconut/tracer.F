@@ -496,8 +496,26 @@ c     ==================================================================
       use phycon, only : pc_pi
       use intgrs_hy, only : nstep
       use tracer_cfc
-      INTEGER :: istat
-      INTEGER(kind=ik) :: 
+      INTEGER (kind=ik) :: prf_istat,prf_stauts,prf_ierr
+      INTEGER (kind=ik) :: sum_r,sum_pre,d
+      INTEGER (Kind=ik) :: left_tracer
+      INTEGER (kind=ik), parameter :: prf_tag_left=9800_ik
+      INTEGER (kind=ik), parameter :: prf_tag_righy=9801_ik
+      IMPLICIT NONE
+      sum_r = tracer_num
+      sum_pre = 0
+      d = 1
+      do while (d<nprocs)
+            if((myproc-d).ge.0) then
+              call MPI_RECV(left_tracer, 1, MPI_INTEGER, myproc-d, 
+            & prf_tag_left, MPI_COMM_WORLD, prf_stauts, prf_ierr)
+            end if
+            if((myproc+d).lt.nprocs) then
+              call MPI_SEND(sum_r,1,)
+            end if
+            d = d * 2
+      end do
+
 
 
 
