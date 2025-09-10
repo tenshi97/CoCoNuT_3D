@@ -32,6 +32,7 @@ c     ============================================================
       INTEGER (KIND=ik) :: testdims (2)
       LOGICAL :: testperiods (2)
       INTEGER (KIND=ik) :: testierr
+      INTEGER (kind=ik) :: sum_prf
 
       CONTAINS
 c     ============================================================

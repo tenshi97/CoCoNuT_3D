@@ -496,29 +496,38 @@ c     ==================================================================
       use phycon, only : pc_pi
       use intgrs_hy, only : nstep
       use tracer_cfc
-      INTEGER (kind=ik) :: prf_istat,prf_stauts,prf_ierr
-      INTEGER (kind=ik) :: sum_r,sum_pre,d
-      INTEGER (Kind=ik) :: left_tracer
-      INTEGER (kind=ik), parameter :: prf_tag_left=9800_ik
-      INTEGER (kind=ik), parameter :: prf_tag_righy=9801_ik
       IMPLICIT NONE
-      sum_r = tracer_num
-      sum_pre = 0
+
+      INTEGER (kind=ik) :: prf_istat(MPI_STATUS_SIZE)
+      INTEGER (kind=ik) :: buffer_send,buffer_recv, prf_ierr
+      INTEGER (Kind=ik) :: p_recv,p_send,d 
+      INTEGER (kind=ik), parameter :: prf_tag_recv=9800_ik
+      INTEGER (kind=ik), parameter :: prf_tag_send=9801_ik
+      sum_prf = tracer_num
       d = 1
       do while (d<nprocs)
-            if((myproc-d).ge.0) then
-              call MPI_RECV(left_tracer, 1, MPI_INTEGER, myproc-d, 
-            & prf_tag_left, MPI_COMM_WORLD, prf_stauts, prf_ierr)
+            p_recv = myproc - d
+            if(p_recv.lt.0) then
+               p_recv = MPI_PROC_NULL
+            end if 
+            p_send = myproc + d
+            if(p_send.ge.nprocs) then
+                  p_send = MPI_PROC_NULL
             end if
-            if((myproc+d).lt.nprocs) then
-              call MPI_SEND(sum_r,1,)
-            end if
+            buffer_send = sum_prf
+            call MPI_Sendrecv(buffer_send,1,
+     &      MPI_INTEGER,p_send,prf_tag_send,buffer_recv,
+     &      1,MPI_INTEGER,
+     &      p_recv,prf_tag_send,MPI_COMM_WORLD,prf_istat,prf_ierr)
+
+            if(p_recv.eq.MPI_PROC_NULL) then
+                  buffer_recv = 0
+            end if 
+            sum_prf = sum_prf + buffer_recv
             d = d * 2
       end do
-
-
-
-
+      WRITE(9999,*) "Tracer Sector:",sum_prf-tracer_num+1,",",sum_prf
+      END SUBROUTINE MPI_COUNT_PREFIX
 
 c     ==================================================================
       SUBROUTINE MPI_TRACER()

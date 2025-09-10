@@ -330,6 +330,9 @@ c     ==================================================================
       USE mo_mpi
 
       USE hydro_areas_mod
+
+      USE tracer
+      USE tracer_cfc
 #ifdef EXTRACT_GW
       USE gw3d
 #endif /* EXTRACT_GW */
@@ -1123,7 +1126,8 @@ c     update energy density after the update of the grav. potential
 ccc   recover the primitive (physical) variables rho, v^i, W, epsilon
          call recover_primitives
 
-      enddo
+      end do
+      call MPI_COUNT_PREFIX
 ccc   end of Runge-Kutta loop
 
 
