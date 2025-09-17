@@ -85,7 +85,7 @@ c     ==================================================================
 
       IMPLICIT NONE
       
-      INTEGER (KIND=ik) tci_search_bisection
+      INTEGER (KIND=ik) :: tci_search_bisection
       REAL (KIND=rk), INTENT(IN) :: r_tracer
       INTEGER (KIND=ik) :: startPointer, endPointer, midPointer
       startPointer = 1
@@ -190,6 +190,38 @@ c     ==================================================================
 
 c     ==================================================================
 
+      FUNCTION varphi_target (ti)
+      
+c     ==================================================================
+
+      USE precision
+      USE grid_cfc
+      USE hydro_primitives_cfc
+
+      USE tracer_cfc
+
+      IMPLICIT NONE
+      
+      INTEGER (KIND=ik), INTENT(IN) :: ti
+      REAL (KIND=rk) :: varphi_tracer
+      INTEGER (KIND=ik) :: startPointer, endPointer, midPointer
+      INTEGER (KIND=ik) :: varphi_target
+      startPointer = 1
+      endPointer = o
+      varphi_tracer = pos_tracer_phi(ti)
+      FINDER_LOOP: DO WHILE (startPointer<endPointer)
+                        midPointer = (startPointer + endPointer) / 2
+                        IF(varphi_tracer<varphi_if(midPointer)) THEN
+                           endPointer = midPointer
+                        ELSE
+                           startPointer = midPointer+1
+                        END IF
+                  END DO FINDER_LOOP
+                  varphi_target = startPointer
+      END FUNCTION varphi_target
+
+c     ==================================================================
+
       SUBROUTINE tracer_position_init()
       
 c     ==================================================================
@@ -236,7 +268,12 @@ c      end do
                  WRITE(7777,*) "INIT INFO:R:", pos_tracer_r(i)
                  WRITE(7777,*) "INIT INFO:THETA", pos_tracer_theta(i)
                  WRITE(7777,*) "INIT INFO:VARPHI", pos_tracer_phi(i)
-                 WRITE(7777,*) "INIT INFO:GLOBAL ID", tracer_id(i) 
+                 WRITE(7777,*) "INIT INFO:GLOBAL ID", tracer_id(i)
+                 WRITE(7777,*) "TEST", varphi_if(0), varphi_if(1)
+                 WRITE(7777,*) "TEST", varphi_if(o-1), varphi_if(o)
+                 WRITE(7777,*) "qy_proc,qz_proc,n,o",qy_proc,qz_proc,n,o
+                 WRITE(7777,*) qy_s,qy_e,qz_s,qz_e
+                 WRITE(7777,*) qz_sg(100),qz_eg(100)
       end do init_loop
       END SUBROUTINE tracer_position_init
 c     Let's just start from 3rd-Runge-Kutta Method to predict the position evolution of the tracers, but first we should get the covariant velocity
@@ -314,8 +351,8 @@ c     ==================================================================
             v_2_t = g_up_22(ir,it,ip)*v_2_t-
      &      beta_up_2(ir,it,ip)/alpha(ir,it,ip)
 #if DIMN==3
-            v_3_t = g_up_22(ir,it,ip)*v_3_t-
-     &      beta_up_2(ir,it,ip)/alpha(ir,it,ip)  
+            v_3_t = g_up_33(ir,it,ip)*v_3_t-
+     &      beta_up_3(ir,it,ip)/alpha(ir,it,ip)  
 #endif
 
             IF(rkint_order.eq.1)    THEN
@@ -325,12 +362,22 @@ c     ==================================================================
                   pos_tracer_theta_old(i) = pos_tracer_theta(i)
                   pos_tracer_theta(i) = pos_tracer_theta_old(i) +
      &            v_2_t*delta_t
+#if DIMN==3
+                  pos_tracer_phi_old(i) = pos_tracer_phi(i)
+                  pos_tracer_phi(i) = pos_tracer_phi_old(i) +
+     &            v_3_t*delta_t
+#endif 
             ELSE IF(rkint_order.eq.2)     THEN
                   pos_tracer_r(i) = (beta_rk * pos_tracer_r_old(i)
      &            + pos_tracer_r(i)+ v_1_t * delta_t)/alpha_rk
                   pos_tracer_theta(i) = (beta_rk * pos_tracer
      &            _theta_old(i) + pos_tracer_theta(i) + v_2_t
      &            * delta_t)/alpha_rk
+#if DIMN==3
+                  pos_tracer_phi(i) = (beta_rk * pos_tracer
+     &            _phi_old(i) + pos_tracer_phi(i) + v_3_t
+     &            * delta_t)/alpha_rk
+#endif 
             ELSE IF(rkint_order.eq.3)     THEN
                   pos_tracer_r(i) = 
      &            (pos_tracer_r_old(i)+2*(pos_tracer_r(i)
@@ -338,6 +385,11 @@ c     ==================================================================
                   pos_tracer_theta(i) = (pos_tracer_theta_old(i)
      &            + 2*(pos_tracer_theta(i) + v_2_t * delta_t))/
      &            3.0_rk
+#if DIMN==3
+                  pos_tracer_phi(i) = (pos_tracer_phi_old(i)
+     &            + 2*(pos_tracer_phi(i) + v_3_t) * delta_t)/
+     &            3.0_rk
+#endif
             END IF
       END DO LOOP_INT
       WRITE(9999,*) "INTEGRATION FINISHED"
@@ -362,6 +414,9 @@ c      WRITE(9999,*) "TEST12"
       LOOP_INTERP:DO i=1, tracer_num
             ir = tracer_ci_r(i)
             it = tracer_ci_theta(i)
+            ip = 1
+#if DIMN ==3
+#endif
 c            WRITE(9999,*) "TEST13",i,ir,it
 c            WRITE(9999,*) "TEST14"
 c            WRITE(8888,*) "----debug for v_1-----"
@@ -484,6 +539,7 @@ c     ==================================================================
 #endif
       END FUNCTION linear_interpolation
 c     ==================================================================
+
       SUBROUTINE MPI_COUNT_PREFIX()
 c     ==================================================================
       USE precision
@@ -528,7 +584,54 @@ c     ==================================================================
       end do
       WRITE(9999,*) "Tracer Sector:",sum_prf-tracer_num+1,",",sum_prf
       END SUBROUTINE MPI_COUNT_PREFIX
+c     ==================================================================
+      SUBROUTINE MPI_TRACER_3D()
 
+c     ==================================================================
+      USE precision
+      USE grid_cfc
+      USE hydro_primitives_cfc
+      USE metric_cfc
+      USE tracer_cfc
+      USE gfloat_hy, ONLY: time
+      USE mo_mpi
+      use phycon, only : pc_pi
+      use intgrs_hy, only : nstep
+      INTEGER :: istat
+      INTEGER(kind=ik) :: nsend_l,nsend_r,nrecv_l,nrecv_r,tracer_num_new
+      INTEGER(kind=ik) :: nsl,nsr,nns,ndebug
+      INTEGER(kind=ik) :: i,j,k
+C      LOGICAL :: issent,numchanged
+c     BM: More efficient to use an array for issent
+      LOGICAL :: numchanged
+      LOGICAL :: issent (1:tracer_num)
+      REAL(kind=rk), allocatable :: sbuffer_tl(:,:)
+      REAL(kind=rk), allocatable :: rbuffer_tl(:,:)
+      REAL(kind=rk), allocatable :: sbuffer_tr(:,:)
+      REAL(kind=rk), allocatable :: rbuffer_tr(:,:)
+      
+      REAL(kind=rk), allocatable :: buffer_tnew(:,:)
+
+      INTEGER (kind=ik) :: src, dest, ierr, mpistat (MPI_STATUS_SIZE)
+      
+      integer (kind=ik), parameter :: tag_ysndl=9700_ik
+      integer (kind=ik), parameter :: tag_ysndr=9701_ik
+      integer (kind=ik), parameter :: tag_zsndl=9702_ik
+      integer (kind=ik), parameter :: tag_zsndr=9703_ik
+      
+      integer (kind=ik) :: d
+      call MPI_TRACER
+      d = 1
+      do while (d<nprocs)
+            call MPI_COUNT_PREFIX
+            do i=1,tracer_num
+                  
+            end do
+      end do
+      
+
+      
+      END SUBROUTINE MPI_TRACER_3D
 c     ==================================================================
       SUBROUTINE MPI_TRACER()
 
@@ -608,7 +711,17 @@ c     BM
             issent (i) = .TRUE.
           end if
         else
+          WRITE(9999,*) "CROSS THE UPPER POLAR"
+          WRITE(9999,*) "Position Before:",pos_tracer_theta(i)
+     &    ,pos_tracer_phi(i)
           pos_tracer_theta(i) = - pos_tracer_theta(i)
+          if(pos_tracer_theta(i).le.pc_pi) then
+            pos_tracer_phi(i) = pos_tracer_phi(i) + pc_pi
+          else
+            pos_tracer_phi(i) = pos_tracer_phi(i) - pc_pi
+          end if 
+          WRITE(9999,*) "Position After:",pos_tracer_theta(i)
+     &    ,pos_tracer_phi(i)
         end if
 c        if(pos_tracer_theta(i).ge.theta_if(0)) then
 c     BM: I believe the previous line should instead be
@@ -630,7 +743,18 @@ c     BM
             issent (i) = .TRUE.
           end if
         else
-            pos_tracer_theta(i) = 2.0_rk * pc_pi - pos_tracer_theta(i)
+          pos_tracer_theta(i) = 2.0_rk * pc_pi - pos_tracer_theta(i)
+          WRITE(9999,*) "CROSS THE UPPER POLAR"
+          WRITE(9999,*) "Position Before:",pos_tracer_theta(i)
+     &    ,pos_tracer_phi(i)
+          pos_tracer_theta(i) = - pos_tracer_theta(i)
+          if(pos_tracer_theta(i).le.pc_pi) then
+            pos_tracer_phi(i) = pos_tracer_phi(i) + pc_pi
+          else
+            pos_tracer_phi(i) = pos_tracer_phi(i) - pc_pi
+          end if 
+          WRITE(9999,*) "Position After:",pos_tracer_theta(i)
+     &    ,pos_tracer_phi(i)
         end if
       end do
       if(nsl/=nsend_l.or.nsr/=nsend_r) then
