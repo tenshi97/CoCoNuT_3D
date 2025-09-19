@@ -197,7 +197,7 @@ c     ==================================================================
       USE precision
       USE grid_cfc
       USE hydro_primitives_cfc
-
+      USE mo_mpi, only: qz_proc
       USE tracer_cfc
 
       IMPLICIT NONE
@@ -206,7 +206,7 @@ c     ==================================================================
       REAL (KIND=rk) :: varphi_tracer
       INTEGER (KIND=ik) :: startPointer, endPointer, midPointer
       INTEGER (KIND=ik) :: varphi_target
-      startPointer = 1
+      startPointer = 0
       endPointer = o
       varphi_tracer = pos_tracer_phi(ti)
       FINDER_LOOP: DO WHILE (startPointer<endPointer)
@@ -217,7 +217,13 @@ c     ==================================================================
                            startPointer = midPointer+1
                         END IF
                   END DO FINDER_LOOP
-                  varphi_target = startPointer
+      if(startPointer.le.0) then
+            startPointer = 1
+      end if
+      if(startPointer.gt.o) then
+            startPointer = o
+      end if
+      varphi_target = (startPointer - 1) / qz_proc 
       END FUNCTION varphi_target
 
 c     ==================================================================
@@ -273,7 +279,7 @@ c      end do
                  WRITE(7777,*) "TEST", varphi_if(o-1), varphi_if(o)
                  WRITE(7777,*) "qy_proc,qz_proc,n,o",qy_proc,qz_proc,n,o
                  WRITE(7777,*) qy_s,qy_e,qz_s,qz_e
-                 WRITE(7777,*) qz_sg(100),qz_eg(100)
+                 WRITE(7777,*) o_s,o_e
       end do init_loop
       END SUBROUTINE tracer_position_init
 c     Let's just start from 3rd-Runge-Kutta Method to predict the position evolution of the tracers, but first we should get the covariant velocity
@@ -619,15 +625,48 @@ c     BM: More efficient to use an array for issent
       integer (kind=ik), parameter :: tag_zsndl=9702_ik
       integer (kind=ik), parameter :: tag_zsndr=9703_ik
       
-      integer (kind=ik) :: d
+      integer (kind=ik) :: d,d_bit,p_target,d_target
       call MPI_TRACER
       d = 1
-      do while (d<nprocs)
+      d_bit = 0
+      LOOP_COMM:do while (d<nprocs)
             call MPI_COUNT_PREFIX
             do i=1,tracer_num
-                  
+                  p_target = varphi_target(i)
+                  d_target = varphi_target - mycoord(2)
+                  if(d_target.eq.0) then
+                        cycle LOOP_COMM
+                  end if
+                  if(btest(abs(d_target),d_bit)) then
+                        if(d_target<0) then
+                              nsend_l = nsend_l +1
+c                       count sent tracers to left
+                        else
+                              nsend_r = nsend_r +1
+c                       count sent tracers to right
+                        end if
+                  end if 
+c                 sendrecv number to left and right(cart shift and ... problem: idk if cart shift will get PROC NULL when out of boundary in phi direction)
             end do
-      end do
+            do i=1,tracer_num
+                  p_target = varphi_target(i)
+                  d_target = varphi_target - mycoord(2)
+                  if(d_target.eq.0) then
+                        cycle LOOP_COMM
+                  end if
+                  if(btest(abs(d_target),d_bit)) then
+                        if(d_target<0) then
+                              nsend_l = nsend_l +1
+c                       count sent tracers to left
+                        else
+                              nsend_r = nsend_r +1
+c                       count sent tracers to right
+                        end if
+                  end if 
+            end do
+            d = d * 2
+            d_bit = d_bit + 1
+      end do LOOP_COMM
       
 
       
@@ -685,7 +724,7 @@ c     BM: Initially set issent to false.
             end if
       end do
       WRITE(9999,*) "NSEND_L:",nsend_l,"NSEND_R:",nsend_r
-      allocate(sbuffer_tl(1:nsend_l,1:5),sbuffer_tr(1:nsend_r,1:5),
+      allocate(sbuffer_tl(1:nsend_l,1:6),sbuffer_tr(1:nsend_r,1:6),
      &  stat=istat)
       WRITE(9999,*) "COUNTING SEND FINISHED"
       nsl=0
@@ -701,11 +740,13 @@ c     BM: Change .ge. to .gt. here:
             sbuffer_tl(nsl,3) = pos_tracer_theta(i)
             sbuffer_tl(nsl,4) = tracer_ci_r(i)
             sbuffer_tl(nsl,5) = tracer_proc(i)
+            sbuffer_tl(nsl,6) = pos_tracer_phi(i)
             WRITE(9999,*) "-----------------------"
             WRITE(9999,*) "TRACER TO BE SENT TO LEFT:"
             WRITE(9999,*) "TRACER ID:",tracer_id(i)
             WRITE(9999,*) "POS_R:", pos_tracer_r(i)
             WRITE(9999,*) "POS_THETA:",pos_tracer_theta(i)
+            WRITE(9999,*) "POS_PHI",pos_tracer_phi(i)
             WRITE(9999,*) "TRACER_CI_R",tracer_ci_r(i)
 c     BM
             issent (i) = .TRUE.
@@ -733,11 +774,13 @@ c     BM: I believe the previous line should instead be
             sbuffer_tr(nsr,3) = pos_tracer_theta(i)
             sbuffer_tr(nsr,4) = tracer_ci_r(i)
             sbuffer_tr(nsr,5) = tracer_proc(i)
+            sbuffer_tr(nsr,6) = pos_tracer_phi(i)
             WRITE(9999,*) "-----------------------"
             WRITE(9999,*) "TRACER TO BE SENT TO RIGHT:"
             WRITE(9999,*) "TRACER ID:",tracer_id(i)
             WRITE(9999,*) "POS_R:", pos_tracer_r(i)
             WRITE(9999,*) "POS_THETA:",pos_tracer_theta(i)
+            WRITE(9999,*) "POS_PHI",pos_tracer_phi(i)
             WRITE(9999,*) "TRACER_CI_R",tracer_ci_r(i)
 c     BM
             issent (i) = .TRUE.
@@ -793,7 +836,7 @@ c     BM
             WRITE(9999,*) "TRACER_NUM",tracer_num
       END IF
 c      WRITE(9999,*) "TEST4"
-      allocate(buffer_tnew(1:tracer_num_new,1:5),
+      allocate(buffer_tnew(1:tracer_num_new,1:6),
      &  stat=istat)
 c     WRITE(9999,*) "TEST5"
       nns = 0
@@ -821,6 +864,7 @@ c$$$        if(.not.issent) then
             buffer_tnew(nns,3) = pos_tracer_theta(i)
             buffer_tnew(nns,4) = tracer_ci_r(i)
             buffer_tnew(nns,5) = tracer_proc(i)
+            buffer_tnew(nns,6) = pos_tracer_phi(i)
         end if
       end do LOOP_Main
       
@@ -829,19 +873,19 @@ c$$$        if(.not.issent) then
      &  EXPECTED",nns,tracer_num-(nsend_l+nsend_r),time
       end if
 
-      allocate(rbuffer_tl(1:nrecv_l,1:5),
-     &  rbuffer_tr(1:nrecv_r,1:5),stat=istat)
+      allocate(rbuffer_tl(1:nrecv_l,1:6),
+     &  rbuffer_tr(1:nrecv_r,1:6),stat=istat)
 
       call MPI_Cart_shift(cart_comm,0,-1,src,dest,ierr)
-      call MPI_Sendrecv (sbuffer_tl,nsend_l*5,
+      call MPI_Sendrecv (sbuffer_tl,nsend_l*6,
      &  MPI_DOUBLE_PRECISION,dest,tag_ysndl,rbuffer_tr,
-     &  nrecv_r*5,MPI_DOUBLE_PRECISION,
+     &  nrecv_r*6,MPI_DOUBLE_PRECISION,
      &  src,tag_ysndl,cart_comm,mpistat,ierr)
 
       call MPI_Cart_shift(cart_comm,0,1,src,dest,ierr)
-      call MPI_Sendrecv (sbuffer_tr,nsend_r*5,
+      call MPI_Sendrecv (sbuffer_tr,nsend_r*6,
      &  MPI_DOUBLE_PRECISION,dest,tag_ysndr,rbuffer_tl,
-     &  nrecv_l*5,MPI_DOUBLE_PRECISION,
+     &  nrecv_l*6,MPI_DOUBLE_PRECISION,
      &  src,tag_ysndr,cart_comm,mpistat,ierr)
 
 
@@ -863,6 +907,7 @@ c$$$        if(.not.issent) then
                   WRITE(9999,*) rbuffer_tl(i,3)
                   WRITE(9999,*) rbuffer_tl(i,4)
                   WRITE(9999,*) rbuffer_tl(i,5)
+                  WRITE(9999,*) rbuffer_tl(i,6)
             end do
       end if
       if(nrecv_r/=0) then
@@ -873,27 +918,33 @@ c$$$        if(.not.issent) then
                   WRITE(9999,*) rbuffer_tr(i,3)
                   WRITE(9999,*) rbuffer_tr(i,4)
                   WRITE(9999,*) rbuffer_tr(i,5)
+                  WRITE(9999,*) rbuffer_tr(i,6)
             end do
       end if
       buffer_tnew(nns+1:nns+nrecv_l,:) = rbuffer_tl(:,:)
       nns = nns+  nrecv_l
       buffer_tnew(nns+1:tracer_num_new,:) = rbuffer_tr(:,:)
 
-      deallocate(tracer_id,pos_tracer_r,pos_tracer_theta,tracer_ci_r,
-     &  tracer_ci_theta,tracer_proc,pos_tracer_r_old,
-     &  pos_tracer_theta_old,v_1_tracer,v_2_tracer)
+      deallocate(tracer_id,pos_tracer_r,pos_tracer_theta,pos_tracer_phi,
+     &  tracer_ci_r,tracer_ci_theta,tracer_ci_phi,tracer_proc
+     &  pos_tracer_r_old,pos_tracer_theta_old,pos_tracer_phi_old
+     &  v_1_tracer,v_2_tracer,v_3_tracer)
 
       allocate(
      &  tracer_id(tracer_num_new),
      &  pos_tracer_r(tracer_num_new),
      &  pos_tracer_theta(tracer_num_new),
+     &  pos_tracer_phi(tracer_num_new),
      &  tracer_ci_r(tracer_num_new),
      &  tracer_ci_theta(tracer_num_new),
+     &  tracer_ci_phi(tracer_num_new),
      &  tracer_proc(tracer_num_new),
      &  pos_tracer_r_old(tracer_num_new),
      &  pos_tracer_theta_old(tracer_num_new),
+     &  pos_tracer_phi_old(tracer_num_new),
      &  v_1_tracer(tracer_num_new),
      &  v_2_tracer(tracer_num_new),
+     &  v_3_tracer(tracer_num_new),
      &  stat=istat)
 
       tracer_id = buffer_tnew(:,1)
@@ -901,6 +952,7 @@ c$$$        if(.not.issent) then
       pos_tracer_theta = buffer_tnew(:,3)
       tracer_ci_r = buffer_tnew(:,4)
       tracer_proc = buffer_tnew(:,5)
+      pos_tracer_phi = buffer_tnew(:,6)
       tracer_num = tracer_num_new
       WRITE(9999,*) "New Tracers NUM:",tracer_num_new
       deallocate(sbuffer_tl,sbuffer_tr,rbuffer_tl,
@@ -914,6 +966,7 @@ c            WRITE(9999,*) "pos_theta:",pos_tracer_theta(i)
 c            WRITE(9999,*) "radial ci index:",tracer_ci_r(i)
 c            WRITE(9999,*) "FROM PROC:",tracer_proc(i)
             call tci_t_search(i)
+            call tci_p_search(i)
       end do
       END SUBROUTINE MPI_TRACER
 c  ********************************************************************
