@@ -632,14 +632,16 @@ c     BM: More efficient to use an array for issent
       LOOP_COMM:do while (d<nprocs)
             call MPI_COUNT_PREFIX
             do i=1,tracer_num
+                  issent(i) = .false.
                   p_target = varphi_target(i)
-                  d_target = varphi_target - mycoord(2)
+                  d_target = varphi_target - coords_t(2)
                   if(d_target.eq.0) then
                         cycle LOOP_COMM
                   end if
                   if(btest(abs(d_target),d_bit)) then
                         if(d_target<0) then
                               nsend_l = nsend_l +1
+                              issent(i) = .true.
 c                       count sent tracers to left
                         else
                               nsend_r = nsend_r +1
@@ -648,15 +650,41 @@ c                       count sent tracers to right
                   end if 
 c                 sendrecv number to left and right(cart shift and ... problem: idk if cart shift will get PROC NULL when out of boundary in phi direction)
             end do
+            allocate(sbuffer_tl(1:nsend_l,1:6),sbuffer_tr(1:nsend_r,1:6),
+     &      stat=istat)
+            if(coords_t(2)+d.lt.dims_t(2)) then
+               call MPI_Cart_shift(cart_comm,0,d,src,dest,ierr)
+               call MPI_Sendrecv (nsend_l,1,
+     &         MPI_INTEGER,dest,tag_ysndl,nrecv_r,
+     &         1,MPI_INTEGER,
+     &         src,tag_ysndl,cart_comm,mpistat,ierr)
+               if(src.eq.MPI_PROC_NULL) then
+                  nrecv_r = 0
+               end if
+            else
+                  nrecv_r = 0
+            end if
+            if(coords_t(2)-d.ge.0) then
+               call MPI_Cart_shift(cart_comm,0,-d,src,dest,ierr)
+               call MPI_Sendrecv (nsend_r,1,
+     &         MPI_INTEGER,dest,tag_ysndl,nrecv_l,
+     &         1,MPI_INTEGER,
+     &         src,tag_ysndl,cart_comm,mpistat,ierr)
+               if(src.eq.MPI_PROC_NULL) then
+                  nrecv_l = 0
+               end if
+            else
+                  nrecv_l = 0
+            end if  
             do i=1,tracer_num
                   p_target = varphi_target(i)
-                  d_target = varphi_target - mycoord(2)
+                  d_target = varphi_target - coords_t(2)
                   if(d_target.eq.0) then
                         cycle LOOP_COMM
                   end if
                   if(btest(abs(d_target),d_bit)) then
                         if(d_target<0) then
-                              nsend_l = nsend_l +1
+                              
 c                       count sent tracers to left
                         else
                               nsend_r = nsend_r +1
@@ -666,6 +694,7 @@ c                       count sent tracers to right
             end do
             d = d * 2
             d_bit = d_bit + 1
+            deallocate(sbuffer_tl,sbuffer_tr)
       end do LOOP_COMM
       
 
