@@ -50,7 +50,7 @@ c     &  trnum_rstrt
       integer :: istat
       integer(kind=ik) :: i,j
       character*64 :: dfilename,procstr,outfilename,mpifilename
-      character*64 :: suffix
+      character*64 :: suffix,mpi3d
       logical, intent(in) :: tracer_rstrt
       integer(kind=ik) :: log2proc
       suffix = 'dat'
@@ -59,9 +59,11 @@ c     &  trnum_rstrt
       outfilename = 'debugmpi/file'//procstr // '.'//suffix
       dfilename = 'debugmpi/debug'// procstr // '.'//suffix
       mpifilename = 'debugmpi/mpi' // procstr // '.'//suffix
+      mpi3d = 'debugmpi/3d' //procstr 
       OPEN(UNIT=7777,FILE=outfilename)
       OPEN(UNIT=8888,FILE=dfilename)
       open(UNIT=9999,FILE=mpifilename)
+      open(UNIT=6666,FILE=mpi3d)
       if(tracer_rstrt) then
         return 
       end if

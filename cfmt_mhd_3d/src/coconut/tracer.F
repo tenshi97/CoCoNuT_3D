@@ -605,8 +605,8 @@ c     ==================================================================
       use intgrs_hy, only : nstep
       INTEGER :: istat
       INTEGER(kind=ik) :: nsend_l,nsend_r,nrecv_l,nrecv_r,tracer_num_new
-      INTEGER(kind=ik) :: nsl,nsr,nns,ndebug
-      INTEGER(kind=ik) :: i,j,k
+      INTEGER(kind=ik) :: i_sl,i_sr,i_ns
+      INTEGER(kind=ik) :: i,j,k,phi_t
 C      LOGICAL :: issent,numchanged
 c     BM: More efficient to use an array for issent
       LOGICAL :: numchanged
@@ -629,19 +629,24 @@ c     BM: More efficient to use an array for issent
       call MPI_TRACER
       d = 1
       d_bit = 0
-      LOOP_COMM:do while (d<nprocs)
+      LOOP_COMM:do while (d*2<nprocs)
             call MPI_COUNT_PREFIX
+            WRITE(6666,*) '---d=',d,'--d_bit:',d_bit
+     &      ,'------Phi Transport------'
+            nsend_l = 0
+            nsend_r = 0
+            nrecv_l = 0
+            nrecv_r = 0
             do i=1,tracer_num
                   issent(i) = .false.
                   p_target = varphi_target(i)
-                  d_target = varphi_target - coords_t(2)
+                  d_target = p_target - coords_t(2)
                   if(d_target.eq.0) then
                         cycle LOOP_COMM
                   end if
                   if(btest(abs(d_target),d_bit)) then
                         if(d_target<0) then
                               nsend_l = nsend_l +1
-                              issent(i) = .true.
 c                       count sent tracers to left
                         else
                               nsend_r = nsend_r +1
@@ -650,8 +655,10 @@ c                       count sent tracers to right
                   end if 
 c                 sendrecv number to left and right(cart shift and ... problem: idk if cart shift will get PROC NULL when out of boundary in phi direction)
             end do
-            allocate(sbuffer_tl(1:nsend_l,1:6),sbuffer_tr(1:nsend_r,1:6),
-     &      stat=istat)
+            allocate(sbuffer_tl(1:nsend_l,1:6),sbuffer_tr(1:nsend_r,1:6)
+     &      ,stat=istat)
+            WRITE(6666,*) 'Allocation Finished,left:',nsend_l,
+     &      'right:',nsend_r
             if(coords_t(2)+d.lt.dims_t(2)) then
                call MPI_Cart_shift(cart_comm,0,d,src,dest,ierr)
                call MPI_Sendrecv (nsend_l,1,
@@ -676,26 +683,129 @@ c                 sendrecv number to left and right(cart shift and ... problem: 
             else
                   nrecv_l = 0
             end if  
+            i_sl = 0
+            i_sr = 0
+            i_ns = 0
+            tracer_num_new = tracer_num + ( nrecv_l + nrecv_r )
+     &      - ( nsend_l + nsend_r )
+            allocate(buffer_tnew(1:tracer_num_new,1:6),
+     &      stat=istat)
+            WRITE(6666,*) 'Number Send and Recv Finished',
+     &      'new tracer num:',tracer_num_new,'Send to Left:'
+     &      ,nsend_l,'Send to Right:',nsend_r
+            WRITE(6666,*) 'Recv From Left:',nrecv_l,
+     &      'Recv From Right:',nrecv_r
             do i=1,tracer_num
                   p_target = varphi_target(i)
-                  d_target = varphi_target - coords_t(2)
+                  d_target = p_target - coords_t(2)
                   if(d_target.eq.0) then
                         cycle LOOP_COMM
                   end if
                   if(btest(abs(d_target),d_bit)) then
                         if(d_target<0) then
-                              
+                           i_sl = i_sl + 1
+                           sbuffer_tl(i_sl,1) = tracer_id(i)
+                           sbuffer_tl(i_sl,2) = pos_tracer_r(i)
+                           sbuffer_tl(i_sl,3) = pos_tracer_theta(i)
+                           sbuffer_tl(i_sl,4) = tracer_ci_r(i)
+                           sbuffer_tl(i_sl,5) = tracer_proc(i)
+                           sbuffer_tl(i_sl,6) = pos_tracer_phi(i)
+                           WRITE(6666,*) 'Send To Left:'
+                           WRITE(6666,*) 'ID:',sbuffer_tl(i_sl,1)
+                           WRITE(6666,*) 'R:',sbuffer_tl(i_sl,2)
+                           WRITE(6666,*) 'Phi:',sbuffer_tl(i_sl,6)
 c                       count sent tracers to left
                         else
-                              nsend_r = nsend_r +1
+                           i_sr = i_sr + 1
+                           sbuffer_tr(i_sr,1) = tracer_id(i)
+                           sbuffer_tr(i_sr,2) = pos_tracer_r(i)
+                           sbuffer_tr(i_sr,3) = pos_tracer_theta(i)
+                           sbuffer_tr(i_sr,4) = tracer_ci_r(i)
+                           sbuffer_tr(i_sr,5) = tracer_proc(i)
+                           sbuffer_tr(i_sr,6) = pos_tracer_phi(i)
+                           WRITE(6666,*) 'Send To Right:'
+                           WRITE(6666,*) 'ID:',sbuffer_tr(i_sr,1)
+                           WRITE(6666,*) 'R:',sbuffer_tr(i_sr,2)
+                           WRITE(6666,*) 'Phi:',sbuffer_tr(i_sr,6)
 c                       count sent tracers to right
                         end if
+                  else
+                     i_ns = i_ns + 1
+                     buffer_tnew(i_ns,1) = tracer_id(i)
+                     buffer_tnew(i_ns,2) = pos_tracer_r(i)
+                     buffer_tnew(i_ns,3) = pos_tracer_theta(i)
+                     buffer_tnew(i_ns,4) = tracer_ci_r(i)
+                     buffer_tnew(i_ns,5) = tracer_proc(i)
+                     buffer_tnew(i_ns,6) = pos_tracer_phi(i)
+                     WRITE(6666,*) 'Not Sent:'
+                     WRITE(6666,*) 'ID:',buffer_tnew(i_ns,1)
+                     WRITE(6666,*) 'R:',buffer_tnew(i_sr,2)
+                     WRITE(6666,*) 'Phi:',buffer_tnew(i_sr,6)
                   end if 
             end do
-            d = d * 2
-            d_bit = d_bit + 1
-            deallocate(sbuffer_tl,sbuffer_tr)
+            allocate(rbuffer_tl(1:nrecv_l,1:6),
+     &      rbuffer_tr(1:nrecv_r,1:6),stat=istat)
+            WRITE(6666,*) "Allocation For Recv Buffer Finished"
+            call MPI_Cart_shift(cart_comm,0,-d,src,dest,ierr)
+            call MPI_Sendrecv (sbuffer_tl,nsend_l*6,
+     &      MPI_DOUBLE_PRECISION,dest,tag_ysndl,rbuffer_tr,
+     &      nrecv_r*6,MPI_DOUBLE_PRECISION,
+     &      src,tag_ysndl,cart_comm,mpistat,ierr)
+
+            call MPI_Cart_shift(cart_comm,0,d,src,dest,ierr)
+            call MPI_Sendrecv (sbuffer_tr,nsend_r*6,
+     &      MPI_DOUBLE_PRECISION,dest,tag_ysndr,rbuffer_tl,
+     &      nrecv_l*6,MPI_DOUBLE_PRECISION,
+     &      src,tag_ysndr,cart_comm,mpistat,ierr)
+            WRITE(6666,*) "SendRecv Array Buffer Finished"
+            buffer_tnew(i_ns+1:i_ns+nrecv_l,:) = rbuffer_tl(:,:)
+            buffer_tnew(i_ns+nrecv_l+1:tracer_num_new,:) 
+     &      = rbuffer_tr(:,:)
+            WRITE(6666,*) "i_ns",i_ns,"i_ns+nrecv_l+nrecv_r",i_ns+
+     &      nrecv_l+nrecv_r,'total:',tracer_num_new
+           deallocate(tracer_id,pos_tracer_r,pos_tracer_theta,
+     &      pos_tracer_phi,
+     &     tracer_ci_r,tracer_ci_theta,tracer_ci_phi,tracer_proc,
+     &     pos_tracer_r_old,pos_tracer_theta_old,pos_tracer_phi_old,
+     &     v_1_tracer,v_2_tracer,v_3_tracer)
+            
+           allocate(
+     &     tracer_id(tracer_num_new),
+     &     pos_tracer_r(tracer_num_new),
+     &     pos_tracer_theta(tracer_num_new),
+     &     pos_tracer_phi(tracer_num_new),
+     &     tracer_ci_r(tracer_num_new),
+     &     tracer_ci_theta(tracer_num_new),
+     &     tracer_ci_phi(tracer_num_new),
+     &     tracer_proc(tracer_num_new),
+     &     pos_tracer_r_old(tracer_num_new),
+     &     pos_tracer_theta_old(tracer_num_new),
+     &     pos_tracer_phi_old(tracer_num_new),
+     &     v_1_tracer(tracer_num_new),
+     &     v_2_tracer(tracer_num_new),
+     &     v_3_tracer(tracer_num_new),
+     &     stat=istat)
+
+           tracer_id = buffer_tnew(:,1)
+           pos_tracer_r = buffer_tnew(:,2)
+           pos_tracer_theta = buffer_tnew(:,3)
+           tracer_ci_r = buffer_tnew(:,4)
+           tracer_proc = buffer_tnew(:,5)
+           pos_tracer_phi = buffer_tnew(:,6)
+           tracer_num = tracer_num_new
+           WRITE(6666,*) "New Tracer Finished"
+           
+           d = d * 2
+           d_bit = d_bit + 1
+            
+           deallocate(sbuffer_tl,sbuffer_tr,rbuffer_tl,rbuffer_tr)
+           WRITE(6666,*) "Deallocate Finished, Waiting for next round"
       end do LOOP_COMM
+
+      do i=1,tracer_num
+         call tci_t_search(i)
+         call tci_p_search(i)
+      end do
       
 
       
@@ -737,7 +847,6 @@ c     BM: More efficient to use an array for issent
       nsend_l = 0
       nsend_r = 0
       numchanged = .false.
-c     BM: Initially set issent to false.
       issent (:) = .false.
       WRITE(9999,*) "START MPI TRACER TIME = ",time," ",nstep
       do i=1,tracer_num
@@ -759,8 +868,6 @@ c     BM: Initially set issent to false.
       nsl=0
       nsr=0
       do i = 1,tracer_num
-C     if(pos_tracer_theta(i).ge.theta_if(0)) then
-c     BM: Change .ge. to .gt. here:
         if(pos_tracer_theta(i).gt.theta_if(0)) then
           if(pos_tracer_theta(i).lt.theta_if(n_s-1)) then
             nsl = nsl+1
@@ -777,7 +884,6 @@ c     BM: Change .ge. to .gt. here:
             WRITE(9999,*) "POS_THETA:",pos_tracer_theta(i)
             WRITE(9999,*) "POS_PHI",pos_tracer_phi(i)
             WRITE(9999,*) "TRACER_CI_R",tracer_ci_r(i)
-c     BM
             issent (i) = .TRUE.
           end if
         else
@@ -793,8 +899,6 @@ c     BM
           WRITE(9999,*) "Position After:",pos_tracer_theta(i)
      &    ,pos_tracer_phi(i)
         end if
-c        if(pos_tracer_theta(i).ge.theta_if(0)) then
-c     BM: I believe the previous line should instead be
         if(pos_tracer_theta(i).lt.theta_if(n)) then
           if(pos_tracer_theta(i).gt.theta_if(n_e)) then
             nsr = nsr + 1
@@ -954,9 +1058,10 @@ c$$$        if(.not.issent) then
       nns = nns+  nrecv_l
       buffer_tnew(nns+1:tracer_num_new,:) = rbuffer_tr(:,:)
 
-      deallocate(tracer_id,pos_tracer_r,pos_tracer_theta,pos_tracer_phi,
-     &  tracer_ci_r,tracer_ci_theta,tracer_ci_phi,tracer_proc
-     &  pos_tracer_r_old,pos_tracer_theta_old,pos_tracer_phi_old
+      deallocate(tracer_id,pos_tracer_r,pos_tracer_theta,
+     &  pos_tracer_phi,
+     &  tracer_ci_r,tracer_ci_theta,tracer_ci_phi,tracer_proc,
+     &  pos_tracer_r_old,pos_tracer_theta_old,pos_tracer_phi_old,
      &  v_1_tracer,v_2_tracer,v_3_tracer)
 
       allocate(
@@ -997,6 +1102,7 @@ c            WRITE(9999,*) "FROM PROC:",tracer_proc(i)
             call tci_t_search(i)
             call tci_p_search(i)
       end do
+c should move it to MPI_TRACER_3D
       END SUBROUTINE MPI_TRACER
 c  ********************************************************************
       END MODULE tracer
