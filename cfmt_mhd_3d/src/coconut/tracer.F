@@ -399,7 +399,45 @@ c     ==================================================================
             END IF
       END DO LOOP_INT
       WRITE(9999,*) "INTEGRATION FINISHED"
+      END SUBROUTINE tracer_integral
+c     ==================================================================
+
+      SUBROUTINE TEST_COMM_3D()
+
+c     ==================================================================
+      USE precision
+      USE grid_cfc
+      USE hydro_primitives_cfc
+      USE metric_cfc
+      USE tracer_cfc
+      USE configure
+      USE gfloat_hy,ONLY: time
+      
+      INTEGER (kind=ik), parameter :: test_mod = 17
+      INTEGER (kind=ik) :: i
+      REAL (kind=rk) :: d_theta_rand
+      REAL (kind=rk) :: d_varphi_rand 
+      REAL (kind=rk) :: rand_num
+
+      call random_seed()  
+      do i = 1,tracer_num
+            if (mod(i,test_mod).eq.0) then
+                  call random_number(rand_num)
+                  d_theta_rand = rand_num * delta_theta
+                  rand_num = rand_num - 0.5
+                  call random_number(rand_num)
+                  rand_num = rand_num - 0.5
+                  d_phi_rand = rand_num * delta_varphi 
+                  pos_tracer_theta(i) = pos_tracer_theta(i) + 
+     &            d_theta_rand
+                  pos_tracer_phi(i) = pos_tracer_phi(i) + 
+     &            d_phi_rand
+            end if
+      end do
+
+      
       END SUBROUTINE
+
 
 c     ==================================================================
 
