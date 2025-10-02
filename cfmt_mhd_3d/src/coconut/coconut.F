@@ -1127,6 +1127,8 @@ ccc   recover the primitive (physical) variables rho, v^i, W, epsilon
          call recover_primitives
 
       end do
+      call TEST_COMM_3D
+      call MPI_TRACER_3D
       call MPI_COUNT_PREFIX
 ccc   end of Runge-Kutta loop
 

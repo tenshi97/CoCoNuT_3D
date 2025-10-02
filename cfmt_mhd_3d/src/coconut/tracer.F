@@ -411,10 +411,11 @@ c     ==================================================================
       USE metric_cfc
       USE tracer_cfc
       USE configure
+      use phycon, only : pc_pi
       USE gfloat_hy,ONLY: time
       
       INTEGER (kind=ik), parameter :: test_mod = 17
-      INTEGER (kind=ik) :: i
+      INTEGER (kind=ik) :: i,dir1,dir2
       REAL (kind=rk) :: d_theta_rand
       REAL (kind=rk) :: d_varphi_rand 
       REAL (kind=rk) :: rand_num
@@ -422,16 +423,43 @@ c     ==================================================================
       call random_seed()  
       do i = 1,tracer_num
             if (mod(i,test_mod).eq.0) then
-                  call random_number(rand_num)
-                  d_theta_rand = rand_num * delta_theta
-                  rand_num = rand_num - 0.5
-                  call random_number(rand_num)
-                  rand_num = rand_num - 0.5
-                  d_phi_rand = rand_num * delta_varphi 
-                  pos_tracer_theta(i) = pos_tracer_theta(i) + 
+               WRITE(6666,*) "START RANDOM MOVEMENT FOR TRACER",i
+               WRITE(6666,*) "Position before:",pos_tracer_theta(i),
+     &         pos_tracer_phi(i)
+               call random_number(rand_num)
+               dir1 = int(2 * rand_num)
+               call random_number(rand_num)
+               dir2 = int(2 * rand_num)
+               call random_number(rand_num)
+               d_theta_rand = rand_num * delta_theta
+               rand_num = rand_num - 0.5
+               call random_number(rand_num)
+               rand_num = rand_num - 0.5
+               d_varphi_rand = 20 * rand_num * delta_varphi 
+               if(dir1.eq.0) then
+                  pos_tracer_theta(i) = theta_if(n_s-1) - 
      &            d_theta_rand
-                  pos_tracer_phi(i) = pos_tracer_phi(i) + 
-     &            d_phi_rand
+               else
+                  pos_tracer_theta(i) = theta_if(n_e) + 
+     &            d_theta_rand                  
+               end if 
+               if(dir2.eq.0) then
+                  pos_tracer_phi(i) = varphi_if(n_s-1) -
+     &            d_varphi_rand
+               else
+                  pos_tracer_phi(i) = varphi_if(n_e) +
+     &            d_varphi_rand
+               end if
+               pos_tracer_phi(i) = pos_tracer_phi(i) + 
+     &         d_varphi_rand
+               if(pos_tracer_phi(i).gt.2*pc_pi) then
+                  pos_tracer_phi(i) = pos_tracer_phi(i) - 2*pc_pi
+               end if
+               if(pos_tracer_phi(i).lt.0) then
+                  pos_tracer_phi(i) = pos_tracer_phi(i) + 2*pc_pi
+               end if
+               WRITE(6666,*) "Position after:",pos_tracer_theta(i),
+     &         pos_tracer_phi(i)
             end if
       end do
 
@@ -667,9 +695,9 @@ c     BM: More efficient to use an array for issent
       call MPI_TRACER
       d = 1
       d_bit = 0
-      LOOP_COMM:do while (d*2<nprocs)
+      LOOP_COMM:do while (d*2 < coords_t(2))
             call MPI_COUNT_PREFIX
-            WRITE(6666,*) '---d=',d,'--d_bit:',d_bit
+            WRITE(6666,*) '-----d=',d,'--d_bit:',d_bit
      &      ,'------Phi Transport------'
             nsend_l = 0
             nsend_r = 0
@@ -680,7 +708,7 @@ c     BM: More efficient to use an array for issent
                   p_target = varphi_target(i)
                   d_target = p_target - coords_t(2)
                   if(d_target.eq.0) then
-                        cycle LOOP_COMM
+                        cycle
                   end if
                   if(btest(abs(d_target),d_bit)) then
                         if(d_target<0) then
@@ -736,9 +764,6 @@ c                 sendrecv number to left and right(cart shift and ... problem: 
             do i=1,tracer_num
                   p_target = varphi_target(i)
                   d_target = p_target - coords_t(2)
-                  if(d_target.eq.0) then
-                        cycle LOOP_COMM
-                  end if
                   if(btest(abs(d_target),d_bit)) then
                         if(d_target<0) then
                            i_sl = i_sl + 1
@@ -785,12 +810,15 @@ c                       count sent tracers to right
      &      rbuffer_tr(1:nrecv_r,1:6),stat=istat)
             WRITE(6666,*) "Allocation For Recv Buffer Finished"
             call MPI_Cart_shift(cart_comm,0,-d,src,dest,ierr)
+            WRITE(6666,*) "test1"
             call MPI_Sendrecv (sbuffer_tl,nsend_l*6,
      &      MPI_DOUBLE_PRECISION,dest,tag_ysndl,rbuffer_tr,
      &      nrecv_r*6,MPI_DOUBLE_PRECISION,
      &      src,tag_ysndl,cart_comm,mpistat,ierr)
-
+            
+            WRITE(6666,*) "test2"
             call MPI_Cart_shift(cart_comm,0,d,src,dest,ierr)
+            WRITE(6666,*) "test3"
             call MPI_Sendrecv (sbuffer_tr,nsend_r*6,
      &      MPI_DOUBLE_PRECISION,dest,tag_ysndr,rbuffer_tl,
      &      nrecv_l*6,MPI_DOUBLE_PRECISION,
