@@ -684,18 +684,17 @@ c     BM: More efficient to use an array for issent
       
       REAL(kind=rk), allocatable :: buffer_tnew(:,:)
 
-      INTEGER (kind=ik) :: src, dest, ierr, mpistat (MPI_STATUS_SIZE)
+      INTEGER (kind=ik) :: src_l, dest_l, src_r,dest_r,ierr, 
+     & mpistat (MPI_STATUS_SIZE)
       
-      integer (kind=ik), parameter :: tag_ysndl=9700_ik
-      integer (kind=ik), parameter :: tag_ysndr=9701_ik
-      integer (kind=ik), parameter :: tag_zsndl=9702_ik
-      integer (kind=ik), parameter :: tag_zsndr=9703_ik
+      integer (kind=ik), parameter :: tag_zl=9702_ik
+      integer (kind=ik), parameter :: tag_zr=9703_ik
       
       integer (kind=ik) :: d,d_bit,p_target,d_target
       call MPI_TRACER
       d = 1
       d_bit = 0
-      LOOP_COMM:do while (d*2 < coords_t(2))
+      LOOP_COMM:do while (d*2 < dims_t(2))
             call MPI_COUNT_PREFIX
             WRITE(6666,*) '-----d=',d,'--d_bit:',d_bit
      &      ,'------Phi Transport------'
@@ -721,34 +720,48 @@ c                       count sent tracers to right
                   end if 
 c                 sendrecv number to left and right(cart shift and ... problem: idk if cart shift will get PROC NULL when out of boundary in phi direction)
             end do
+            WRITE(6666,*) 'Number of tracers to be sent: left--'
+     &      ,nsend_l,'right---',nsend_r
             allocate(sbuffer_tl(1:nsend_l,1:6),sbuffer_tr(1:nsend_r,1:6)
      &      ,stat=istat)
-            WRITE(6666,*) 'Allocation Finished,left:',nsend_l,
-     &      'right:',nsend_r
-            if(coords_t(2)+d.lt.dims_t(2)) then
-               call MPI_Cart_shift(cart_comm,0,d,src,dest,ierr)
-               call MPI_Sendrecv (nsend_l,1,
-     &         MPI_INTEGER,dest,tag_ysndl,nrecv_r,
-     &         1,MPI_INTEGER,
-     &         src,tag_ysndl,cart_comm,mpistat,ierr)
-               if(src.eq.MPI_PROC_NULL) then
-                  nrecv_r = 0
-               end if
-            else
-                  nrecv_r = 0
+            WRITE(6666,*) 'Allocation Send Buffer Finished'
+            call MPI_Cart_shift(cart_comm,1,d,src_l,dest_r,ierr)
+            WRITE(6666,*) 'CART SHIFT +D FOR NUMBER FINISHED'
+            WRITE(6666,*) 
+            call MPI_Sendrecv (nsend_r,1,
+     &      MPI_INTEGER,dest_r,tag_zr,nrecv_l,
+     &      1,MPI_INTEGER,
+     &      src_l,tag_zr,cart_comm,mpistat,ierr)
+            WRITE(6666,*) 'SENDRECV +D FOR NUMBER FINISHED'
+            WRITE(6666,*) 'DEST_R:',dest_r,'  SRC_L:',src_l
+            WRITE(6666,*) 'nsend_r',nsend_r,'nrecv_l',nrecv_l
+            if(src_l.eq.MPI_PROC_NULL) then
+               nrecv_l = 0
+               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
+     &         coords_t(2), "d=",d, "source not exist",coords_t(2)-d
             end if
-            if(coords_t(2)-d.ge.0) then
-               call MPI_Cart_shift(cart_comm,0,-d,src,dest,ierr)
-               call MPI_Sendrecv (nsend_r,1,
-     &         MPI_INTEGER,dest,tag_ysndl,nrecv_l,
-     &         1,MPI_INTEGER,
-     &         src,tag_ysndl,cart_comm,mpistat,ierr)
-               if(src.eq.MPI_PROC_NULL) then
-                  nrecv_l = 0
-               end if
-            else
-                  nrecv_l = 0
-            end if  
+            if(dest_l.eq.MPI_PROC_NULL) then
+               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
+     &         coords_t(2),"d=",d, "dest not exist",coords_t(2)-d
+            end if
+            call MPI_Cart_shift(cart_comm,1,-d,src_r,dest_l,ierr)
+            WRITE(6666,*) 'CART SHIFT -D FOR NUMBER FINISHED'
+            call MPI_Sendrecv (nsend_l,1,
+     &      MPI_INTEGER,dest_l,tag_zl,nrecv_r,
+     &      1,MPI_INTEGER,
+     &      src_r,tag_zl,cart_comm,mpistat,ierr)
+            WRITE(6666,*) 'SENDRECV +D FOR NUMBER FINISHED'
+           WRITE(6666,*) 'DEST_L:',dest_l,'  SRC_R:',src_r
+            WRITE(6666,*) 'nsend_l',nsend_l,'nrecv_l',nrecv_r
+            if(src_r.eq.MPI_PROC_NULL) then
+               nrecv_r = 0
+               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
+     &         coords_t(2), "d=",d, "source not exist",coords_t(2)-d
+            end if
+            if(dest_r.eq.MPI_PROC_NULL) then
+               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
+     &         coords_t(2),"d=",d, "dest not exist",coords_t(2)-d
+            end if
             i_sl = 0
             i_sr = 0
             i_ns = 0
@@ -756,11 +769,14 @@ c                 sendrecv number to left and right(cart shift and ... problem: 
      &      - ( nsend_l + nsend_r )
             allocate(buffer_tnew(1:tracer_num_new,1:6),
      &      stat=istat)
-            WRITE(6666,*) 'Number Send and Recv Finished',
-     &      'new tracer num:',tracer_num_new,'Send to Left:'
-     &      ,nsend_l,'Send to Right:',nsend_r
+            WRITE(6666,*) 'Number Send and Recv Finished'
+            WRITE(6666,*) 'New tracer Num:',tracer_num_new
+     &      ,"[old:",tracer_num,"]"
+            WRITE(6666,*) 'Sent to Left:',nsend_l,
+     &      'Send to Right:',nsend_r
             WRITE(6666,*) 'Recv From Left:',nrecv_l,
      &      'Recv From Right:',nrecv_r
+
             do i=1,tracer_num
                   p_target = varphi_target(i)
                   d_target = p_target - coords_t(2)
@@ -773,10 +789,10 @@ c                 sendrecv number to left and right(cart shift and ... problem: 
                            sbuffer_tl(i_sl,4) = tracer_ci_r(i)
                            sbuffer_tl(i_sl,5) = tracer_proc(i)
                            sbuffer_tl(i_sl,6) = pos_tracer_phi(i)
-                           WRITE(6666,*) 'Send To Left:'
-                           WRITE(6666,*) 'ID:',sbuffer_tl(i_sl,1)
-                           WRITE(6666,*) 'R:',sbuffer_tl(i_sl,2)
-                           WRITE(6666,*) 'Phi:',sbuffer_tl(i_sl,6)
+c                           WRITE(6666,*) 'Send To Left:'
+c                           WRITE(6666,*) 'ID:',sbuffer_tl(i_sl,1)
+c                           WRITE(6666,*) 'R:',sbuffer_tl(i_sl,2)
+c                           WRITE(6666,*) 'Phi:',sbuffer_tl(i_sl,6)
 c                       count sent tracers to left
                         else
                            i_sr = i_sr + 1
@@ -786,10 +802,10 @@ c                       count sent tracers to left
                            sbuffer_tr(i_sr,4) = tracer_ci_r(i)
                            sbuffer_tr(i_sr,5) = tracer_proc(i)
                            sbuffer_tr(i_sr,6) = pos_tracer_phi(i)
-                           WRITE(6666,*) 'Send To Right:'
-                           WRITE(6666,*) 'ID:',sbuffer_tr(i_sr,1)
-                           WRITE(6666,*) 'R:',sbuffer_tr(i_sr,2)
-                           WRITE(6666,*) 'Phi:',sbuffer_tr(i_sr,6)
+c                           WRITE(6666,*) 'Send To Right:'
+c                           WRITE(6666,*) 'ID:',sbuffer_tr(i_sr,1)
+c                           WRITE(6666,*) 'R:',sbuffer_tr(i_sr,2)
+c                           WRITE(6666,*) 'Phi:',sbuffer_tr(i_sr,6)
 c                       count sent tracers to right
                         end if
                   else
@@ -800,41 +816,46 @@ c                       count sent tracers to right
                      buffer_tnew(i_ns,4) = tracer_ci_r(i)
                      buffer_tnew(i_ns,5) = tracer_proc(i)
                      buffer_tnew(i_ns,6) = pos_tracer_phi(i)
-                     WRITE(6666,*) 'Not Sent:'
-                     WRITE(6666,*) 'ID:',buffer_tnew(i_ns,1)
-                     WRITE(6666,*) 'R:',buffer_tnew(i_sr,2)
-                     WRITE(6666,*) 'Phi:',buffer_tnew(i_sr,6)
+c                     WRITE(6666,*) 'Not Sent:'
+c                     WRITE(6666,*) 'ID:',buffer_tnew(i_ns,1)
+c                     WRITE(6666,*) 'R:',buffer_tnew(i_sr,2)
+c                     WRITE(6666,*) 'Phi:',buffer_tnew(i_sr,6)
                   end if 
             end do
             allocate(rbuffer_tl(1:nrecv_l,1:6),
      &      rbuffer_tr(1:nrecv_r,1:6),stat=istat)
             WRITE(6666,*) "Allocation For Recv Buffer Finished"
-            call MPI_Cart_shift(cart_comm,0,-d,src,dest,ierr)
-            WRITE(6666,*) "test1"
-            call MPI_Sendrecv (sbuffer_tl,nsend_l*6,
-     &      MPI_DOUBLE_PRECISION,dest,tag_ysndl,rbuffer_tr,
-     &      nrecv_r*6,MPI_DOUBLE_PRECISION,
-     &      src,tag_ysndl,cart_comm,mpistat,ierr)
-            
-            WRITE(6666,*) "test2"
-            call MPI_Cart_shift(cart_comm,0,d,src,dest,ierr)
-            WRITE(6666,*) "test3"
+            call MPI_Cart_shift(cart_comm,1,d,src_l,dest_r,ierr)
+            WRITE(6666,*) "CART SHIFT +d FINISHED"
             call MPI_Sendrecv (sbuffer_tr,nsend_r*6,
-     &      MPI_DOUBLE_PRECISION,dest,tag_ysndr,rbuffer_tl,
+     &      MPI_DOUBLE_PRECISION,dest_r,tag_zr,rbuffer_tl,
      &      nrecv_l*6,MPI_DOUBLE_PRECISION,
-     &      src,tag_ysndr,cart_comm,mpistat,ierr)
-            WRITE(6666,*) "SendRecv Array Buffer Finished"
+     &      src_l,tag_zr,cart_comm,mpistat,ierr)
+            
+            WRITE(6666,*) "SENDRECV +d finished"
+            call MPI_Cart_shift(cart_comm,1,-d,src_r,dest_l,ierr)
+            WRITE(6666,*) "CART SHIFT -d FINISHED"
+            call MPI_Sendrecv (sbuffer_tl,nsend_l*6,
+     &      MPI_DOUBLE_PRECISION,dest_l,tag_zl,rbuffer_tr,
+     &      nrecv_r*6,MPI_DOUBLE_PRECISION,
+     &      src_r,tag_zl,cart_comm,mpistat,ierr)
+            WRITE(6666,*) "SENDRECV -d finished"
             buffer_tnew(i_ns+1:i_ns+nrecv_l,:) = rbuffer_tl(:,:)
             buffer_tnew(i_ns+nrecv_l+1:tracer_num_new,:) 
      &      = rbuffer_tr(:,:)
             WRITE(6666,*) "i_ns",i_ns,"i_ns+nrecv_l+nrecv_r",i_ns+
      &      nrecv_l+nrecv_r,'total:',tracer_num_new
+            WRITE(6666,*) "Check:Left Size",size(rbuffer_tl,1)
+            WRITE(6666,*) "Check:Right Size",size(rbuffer_tr,1)
+            WRITE(6666,*) "Allocate Status:",allocated(tracer_id)
+            
            deallocate(tracer_id,pos_tracer_r,pos_tracer_theta,
      &      pos_tracer_phi,
      &     tracer_ci_r,tracer_ci_theta,tracer_ci_phi,tracer_proc,
      &     pos_tracer_r_old,pos_tracer_theta_old,pos_tracer_phi_old,
      &     v_1_tracer,v_2_tracer,v_3_tracer)
-            
+           WRITE(6666,*) "Deallocation Finished"
+
            allocate(
      &     tracer_id(tracer_num_new),
      &     pos_tracer_r(tracer_num_new),
@@ -851,7 +872,8 @@ c                       count sent tracers to right
      &     v_2_tracer(tracer_num_new),
      &     v_3_tracer(tracer_num_new),
      &     stat=istat)
-
+           
+           WRITE(6666,*) "Allocation Finished"
            tracer_id = buffer_tnew(:,1)
            pos_tracer_r = buffer_tnew(:,2)
            pos_tracer_theta = buffer_tnew(:,3)
@@ -864,7 +886,8 @@ c                       count sent tracers to right
            d = d * 2
            d_bit = d_bit + 1
             
-           deallocate(sbuffer_tl,sbuffer_tr,rbuffer_tl,rbuffer_tr)
+           deallocate(sbuffer_tl,sbuffer_tr,rbuffer_tl,rbuffer_tr,
+     &     buffer_tnew)
            WRITE(6666,*) "Deallocate Finished, Waiting for next round"
       end do LOOP_COMM
 
