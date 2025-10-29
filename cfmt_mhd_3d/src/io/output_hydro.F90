@@ -432,6 +432,19 @@ subroutine write_output_files
 #endif
 
 
+     !  Tracer Module Output
+
+     call writeq(hfile,"trid",tracer_id,"Global ID of Tracers","1","index", & 
+       (/n_ts,n_te/),(/1,tracer_total/))
+     call writeq(hfile,"trx",pos_tracer_r,"Tracer Particles X Coordinate(Radius)","cm", &
+       "index",(/n_ts,n_te/),(/1,tracer_total/))
+     call writeq(hfile,"try",pos_tracer_theta,"Tracer Particles Y Coordinate(Theta)","cm", &
+       "index",(/n_ts,n_te/),(/1,tracer_total/))
+     call writeq(hfile,"trz",pos_tracer_phi,"Tracer Particles Z Coordinate(Phi)","cm", &
+       "index",(/n_ts,n_te/),(/1,tracer_total/))   
+
+     write(8888,*) "proc:",myproc,"sector:[",n_ts,",",n_te,"] total:",tracer_total
+     
      call writeq(hfile, "tm", tm, "Enclosed baryonic mass", "solarmass", "radius:xzn")
      call writeq(hfile, "tgm", tgm, "Enclosed gravitational mass", "solarmass", "radius:xzn")
      call writeq(hfile, "eph", ephhlp, "Lapse function (grav. potential)", "1", "radius:xzn")

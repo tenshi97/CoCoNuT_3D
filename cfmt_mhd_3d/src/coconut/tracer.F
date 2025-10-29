@@ -106,7 +106,52 @@ c     ==================================================================
                   
       END FUNCTION tci_search_bisection
 
+c     ==================================================================
+      SUBROUTINE validate_3dcomm()
 
+c     ==================================================================
+      USE precision
+      USE grid_cfc
+      USE hydro_primitives_cfc
+
+      USE tracer_cfc
+
+      IMPLICIT NONE
+
+      INTEGER (KIND=ik) :: i,j,k
+      REAL (KIND=rk) :: pos_r,pos_theta,pos_phi
+      do i =1,tracer_num
+            pos_r = pos_tracer_r(i)
+            pos_theta = pos_tracer_theta(i)
+            pos_phi = pos_tracer_phi(i)
+            if(pos_theta<theta_if(n_s-1).or.pos_theta>theta_if(n_e)
+     &      ) then
+                  WRITE(6666,*) "Error: Tracer",i,"Out of Bound(Theta)",
+     &            "Coordinate:",pos_theta
+                  WRITE(6666,*) "Boundary(Theta LEFT):",
+     &            theta_if(n_s-1),"(",n_s," LEFT)"
+                  WRITE(6666,*) "Boundary(Theta RIGHT)",
+     &            theta_if(n_e),"(",n_e," RIGHT)"
+            else
+                  WRITE(6666,*) "Tracer",i
+     &            ,"passed the validation(Theta)"
+            end if
+            if(pos_phi<varphi_if(o_s-1).or.pos_phi>varphi_if(o_e)
+     &      ) then
+                  WRITE(6666,*) "Error: Tracer",i,"Out of Bound(Phi)",
+     &            "Coordinate:",pos_phi
+                  WRITE(6666,*) "Boundary(Phi LEFT):",
+     &            varphi_if(o_s-1),"(",o_s," LEFT)"
+                  WRITE(6666,*) "Boundary(Phi RIGHT)",
+     &            varphi_if(o_e),"(",o_e," RIGHT)"
+            else
+                  WRITE(6666,*) "Tracer",i
+     &            ,"passed the validation(Phi)"
+            end if
+      end do
+
+
+      END SUBROUTINE
 c     ==================================================================
 
       SUBROUTINE tci_t_search (ti)
@@ -168,7 +213,7 @@ c     ==================================================================
       startPointer = o_s
       endPointer = o_e
       varphi_tracer = pos_tracer_phi(ti)
-      IF(varphi_tracer<=varphi_if(n_s-1)) THEN
+      IF(varphi_tracer<=varphi_if(o_s-1)) THEN
          tracer_ci_phi(ti) = o_s-1
          RETURN
       END IF
@@ -206,7 +251,7 @@ c     ==================================================================
       REAL (KIND=rk) :: varphi_tracer
       INTEGER (KIND=ik) :: startPointer, endPointer, midPointer
       INTEGER (KIND=ik) :: varphi_target
-      startPointer = 0
+      startPointer = 1
       endPointer = o
       varphi_tracer = pos_tracer_phi(ti)
       FINDER_LOOP: DO WHILE (startPointer<endPointer)
@@ -299,6 +344,7 @@ c     ==================================================================
       USE mo_mpi
       USE gfloat_hy, ONLY: time
       use intgrs_hy, only : nstep
+      use phycon, only : pc_pi
       IMPLICIT NONE
       
       integer (KIND=ik) :: i,ir,it,ip
@@ -307,6 +353,8 @@ c     ==================================================================
       real(KIND=rk), INTENT(IN) :: alpha_rk,beta_rk,delta_t
       WRITE(9999,*) "INTEGRATION START at time:",time," ",nstep
       LOOP_INT:DO i=1,tracer_num
+            WRITE(5555,*) "-------------INTEGRATION FOR TRACER",i,
+     &      "------------------"
             call tci_search(i)
             call tci_t_search(i)
             ir = tracer_ci_r(i)
@@ -315,6 +363,9 @@ c     ==================================================================
 #if DIMN == 3
             call tci_p_search(i)
             ip = tracer_ci_phi(i)
+            WRITE(7777,*) "Angle Pre-Integration:",pos_tracer_phi(i)
+            WRITE(7777,*) "Phi Search Result:",ip,"[",varphi_if(ip-1),
+     &      varphi_if(ip),"]"
 #endif
             IF((ir.lt.0).or.(ir.gt.m))   THEN
                   CYCLE LOOP_INT
@@ -339,6 +390,7 @@ c     ==================================================================
             v_3_t = linear_interpolation
      &      (v_3(-1:m+1,n_s-1:n_e+1,o_s-1:o_e+1),-1,m+1,n_s-1,
      &      n_e+1,o_s-1,o_e+1,i,.false.,"v_3")
+            WRITE(5555,*) "Interpolate Velocity :",v_1_t,v_2_t,v_3_t
 #endif
             IF((it.lt.n_s))      THEN
                it = n_s
@@ -359,6 +411,8 @@ c     ==================================================================
 #if DIMN==3
             v_3_t = g_up_33(ir,it,ip)*v_3_t-
      &      beta_up_3(ir,it,ip)/alpha(ir,it,ip)  
+            WRITE(5555,*) "Corrected velocity:",v_1_t,v_2_t,
+     &      v_3_t
 #endif
 
             IF(rkint_order.eq.1)    THEN
@@ -372,6 +426,9 @@ c     ==================================================================
                   pos_tracer_phi_old(i) = pos_tracer_phi(i)
                   pos_tracer_phi(i) = pos_tracer_phi_old(i) +
      &            v_3_t*delta_t
+                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
+                  WRITE(5555,*) "Angle:",
+     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
 #endif 
             ELSE IF(rkint_order.eq.2)     THEN
                   pos_tracer_r(i) = (beta_rk * pos_tracer_r_old(i)
@@ -383,6 +440,9 @@ c     ==================================================================
                   pos_tracer_phi(i) = (beta_rk * pos_tracer
      &            _phi_old(i) + pos_tracer_phi(i) + v_3_t
      &            * delta_t)/alpha_rk
+                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
+                  WRITE(5555,*) "Angle:",
+     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
 #endif 
             ELSE IF(rkint_order.eq.3)     THEN
                   pos_tracer_r(i) = 
@@ -393,12 +453,19 @@ c     ==================================================================
      &            3.0_rk
 #if DIMN==3
                   pos_tracer_phi(i) = (pos_tracer_phi_old(i)
-     &            + 2*(pos_tracer_phi(i) + v_3_t) * delta_t)/
+     &            + 2*(pos_tracer_phi(i) + v_3_t * delta_t))/
      &            3.0_rk
+                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
+                  WRITE(5555,*) "Angle:",
+     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
 #endif
             END IF
+         pos_tracer_phi(i) = mod(pos_tracer_phi(i),2.0_rk*pc_pi)
+         if(pos_tracer_phi(i).lt.0) then
+            pos_tracer_phi(i) = pos_tracer_phi(i) + 2.0_rk*pc_pi
+         end if
       END DO LOOP_INT
-      WRITE(9999,*) "INTEGRATION FINISHED"
+      WRITE(5555,*) "INTEGRATION FINISHED"
       END SUBROUTINE tracer_integral
 c     ==================================================================
 
@@ -434,8 +501,7 @@ c     ==================================================================
                d_theta_rand = rand_num * delta_theta
                rand_num = rand_num - 0.5
                call random_number(rand_num)
-               rand_num = rand_num - 0.5
-               d_varphi_rand = 20 * rand_num * delta_varphi 
+               d_varphi_rand = rand_num * 2 * pc_pi
                if(dir1.eq.0) then
                   pos_tracer_theta(i) = theta_if(n_s-1) - 
      &            d_theta_rand
@@ -443,20 +509,23 @@ c     ==================================================================
                   pos_tracer_theta(i) = theta_if(n_e) + 
      &            d_theta_rand                  
                end if 
-               if(dir2.eq.0) then
-                  pos_tracer_phi(i) = varphi_if(n_s-1) -
-     &            d_varphi_rand
-               else
-                  pos_tracer_phi(i) = varphi_if(n_e) +
-     &            d_varphi_rand
-               end if
-               pos_tracer_phi(i) = pos_tracer_phi(i) + 
-     &         d_varphi_rand
-               if(pos_tracer_phi(i).gt.2*pc_pi) then
-                  pos_tracer_phi(i) = pos_tracer_phi(i) - 2*pc_pi
-               end if
+c               if(dir2.eq.0) then
+c                  pos_tracer_phi(i) = varphi_if(n_s-1) -
+c     &            d_varphi_rand
+c               else
+c                  pos_tracer_phi(i) = varphi_if(n_e) +
+c     &            d_varphi_rand
+c               end if
+c               pos_tracer_phi(i) = pos_tracer_phi(i) + 
+c     &         d_varphi_rand
+               pos_tracer_phi(i) = pos_tracer_phi(i) + d_varphi_rand
+               pos_tracer_theta(i) = mod(pos_tracer_theta(i),pc_pi)
+               if(pos_tracer_theta(i).lt.0) then
+                  pos_tracer_theta(i) = pos_tracer_theta(i) + pc_pi
+               end if 
+               pos_tracer_phi(i) = mod(pos_tracer_phi(i),2.0_rk*pc_pi)
                if(pos_tracer_phi(i).lt.0) then
-                  pos_tracer_phi(i) = pos_tracer_phi(i) + 2*pc_pi
+                  pos_tracer_phi(i) = pos_tracer_phi(i) + 2.0_rk*pc_pi
                end if
                WRITE(6666,*) "Position after:",pos_tracer_theta(i),
      &         pos_tracer_phi(i)
@@ -575,6 +644,8 @@ c     ==================================================================
       ir = tracer_ci_r(ti)
       it = tracer_ci_theta(ti)
       ip = tracer_ci_phi(ti)
+      WRITE(5555,*) "-------------INTERP:",dbg,"------------------"
+      WRITE(5555,*) "Search Index Result:",ir,it,ip
       xir0 = (pos_r-r_if(ir-1))/delta_r(ir)
       xir1 = 1 - xir0
       xit0 = (pos_t-theta_if(it-1))/delta_theta
@@ -595,6 +666,7 @@ c     ==================================================================
             xip1 = xip1 - floor(xip1)
             xip0 = 1 - xip1
       end if
+      WRITE(5555,*) "Ratios:",xit0,xit1,xip0,xip1
 #if DIMN<=2
             val =  xit1*(xir1*arr(ir-1,it-1,1)+xir0*arr(ir,it-1,1))+xit0*
      &     (xir1*arr(ir-1,it,1)+xir0*arr(ir,it,1))
@@ -608,7 +680,13 @@ c     ==================================================================
      &            xir0*xit1*xip0*arr(ir,it-1,ip) +
      &            xir1*xit0*xip0*arr(ir-1,it,ip) +
      &            xir0*xit0*xip0*arr(ir,it,ip)
+      WRITE(5555,*) "8 GRID VALUE:",arr(ir-1,it-1,ip-1),
+     & arr(ir,it-1,ip-1),arr(ir-1,it,ip-1),arr(ir,it,ip-1),
+     & arr(ir-1,it-1,ip),arr(ir,it-1,ip),arr(ir-1,it,ip),
+     & arr(ir,it,ip)
 #endif
+      WRITE(5555,*) "INTERP RESULT:",val
+ccc   add debug sentence
       END FUNCTION linear_interpolation
 c     ==================================================================
 
@@ -654,6 +732,8 @@ c     ==================================================================
             sum_prf = sum_prf + buffer_recv
             d = d * 2
       end do
+      tracer_s = sum—prf - tracer_num + 1
+      tracer_e = sum_prf 
       WRITE(9999,*) "Tracer Sector:",sum_prf-tracer_num+1,",",sum_prf
       END SUBROUTINE MPI_COUNT_PREFIX
 c     ==================================================================
@@ -692,10 +772,10 @@ c     BM: More efficient to use an array for issent
       
       integer (kind=ik) :: d,d_bit,p_target,d_target
       call MPI_TRACER
+
       d = 1
       d_bit = 0
-      LOOP_COMM:do while (d*2 < dims_t(2))
-            call MPI_COUNT_PREFIX
+      LOOP_COMM:do while (d*2.le.dims_t(2))
             WRITE(6666,*) '-----d=',d,'--d_bit:',d_bit
      &      ,'------Phi Transport------'
             nsend_l = 0
@@ -720,6 +800,10 @@ c                       count sent tracers to right
                   end if 
 c                 sendrecv number to left and right(cart shift and ... problem: idk if cart shift will get PROC NULL when out of boundary in phi direction)
             end do
+            if(d*2.eq.dims_t(2)) then
+                  nsend_l = 0
+            end if
+c           if d = phi_process/2, then only right direction is allowed in order to avoid duplicated transport
             WRITE(6666,*) 'Number of tracers to be sent: left--'
      &      ,nsend_l,'right---',nsend_r
             allocate(sbuffer_tl(1:nsend_l,1:6),sbuffer_tr(1:nsend_r,1:6)
@@ -782,18 +866,20 @@ c                 sendrecv number to left and right(cart shift and ... problem: 
                   d_target = p_target - coords_t(2)
                   if(btest(abs(d_target),d_bit)) then
                         if(d_target<0) then
-                           i_sl = i_sl + 1
-                           sbuffer_tl(i_sl,1) = tracer_id(i)
-                           sbuffer_tl(i_sl,2) = pos_tracer_r(i)
-                           sbuffer_tl(i_sl,3) = pos_tracer_theta(i)
-                           sbuffer_tl(i_sl,4) = tracer_ci_r(i)
-                           sbuffer_tl(i_sl,5) = tracer_proc(i)
-                           sbuffer_tl(i_sl,6) = pos_tracer_phi(i)
-c                           WRITE(6666,*) 'Send To Left:'
-c                           WRITE(6666,*) 'ID:',sbuffer_tl(i_sl,1)
-c                           WRITE(6666,*) 'R:',sbuffer_tl(i_sl,2)
-c                           WRITE(6666,*) 'Phi:',sbuffer_tl(i_sl,6)
-c                       count sent tracers to left
+                           if(d*2.ne.dims_t(2)) then
+                              i_sl = i_sl + 1
+                              sbuffer_tl(i_sl,1) = tracer_id(i)
+                              sbuffer_tl(i_sl,2) = pos_tracer_r(i)
+                              sbuffer_tl(i_sl,3) = pos_tracer_theta(i)
+                              sbuffer_tl(i_sl,4) = tracer_ci_r(i)
+                              sbuffer_tl(i_sl,5) = tracer_proc(i)
+                              sbuffer_tl(i_sl,6) = pos_tracer_phi(i)
+c                             WRITE(6666,*) 'Send To Left:'
+c                             WRITE(6666,*) 'ID:',sbuffer_tl(i_sl,1)
+c                             WRITE(6666,*) 'R:',sbuffer_tl(i_sl,2)
+c                             WRITE(6666,*) 'Phi:',sbuffer_tl(i_sl,6)
+c                             count sent tracers to left
+                           end if
                         else
                            i_sr = i_sr + 1
                            sbuffer_tr(i_sr,1) = tracer_id(i)
@@ -822,6 +908,8 @@ c                     WRITE(6666,*) 'R:',buffer_tnew(i_sr,2)
 c                     WRITE(6666,*) 'Phi:',buffer_tnew(i_sr,6)
                   end if 
             end do
+            WRITE(6666,*) "Send Check:Left Size",size(sbuffer_tl,1)
+            WRITE(6666,*) "Send Check:Right Size",size(sbuffer_tr,1)
             allocate(rbuffer_tl(1:nrecv_l,1:6),
      &      rbuffer_tr(1:nrecv_r,1:6),stat=istat)
             WRITE(6666,*) "Allocation For Recv Buffer Finished"
@@ -831,7 +919,6 @@ c                     WRITE(6666,*) 'Phi:',buffer_tnew(i_sr,6)
      &      MPI_DOUBLE_PRECISION,dest_r,tag_zr,rbuffer_tl,
      &      nrecv_l*6,MPI_DOUBLE_PRECISION,
      &      src_l,tag_zr,cart_comm,mpistat,ierr)
-            
             WRITE(6666,*) "SENDRECV +d finished"
             call MPI_Cart_shift(cart_comm,1,-d,src_r,dest_l,ierr)
             WRITE(6666,*) "CART SHIFT -d FINISHED"
@@ -845,8 +932,8 @@ c                     WRITE(6666,*) 'Phi:',buffer_tnew(i_sr,6)
      &      = rbuffer_tr(:,:)
             WRITE(6666,*) "i_ns",i_ns,"i_ns+nrecv_l+nrecv_r",i_ns+
      &      nrecv_l+nrecv_r,'total:',tracer_num_new
-            WRITE(6666,*) "Check:Left Size",size(rbuffer_tl,1)
-            WRITE(6666,*) "Check:Right Size",size(rbuffer_tr,1)
+            WRITE(6666,*) "Recv Check:Left Size",size(rbuffer_tl,1)
+            WRITE(6666,*) "Recv Check:Right Size",size(rbuffer_tr,1)
             WRITE(6666,*) "Allocate Status:",allocated(tracer_id)
             
            deallocate(tracer_id,pos_tracer_r,pos_tracer_theta,
@@ -976,7 +1063,7 @@ c     BM: More efficient to use an array for issent
             issent (i) = .TRUE.
           end if
         else
-          WRITE(9999,*) "CROSS THE UPPER POLAR"
+          WRITE(9999,*) i,"CROSS THE UPPER POLAR"
           WRITE(9999,*) "Position Before:",pos_tracer_theta(i)
      &    ,pos_tracer_phi(i)
           pos_tracer_theta(i) = - pos_tracer_theta(i)
@@ -1009,7 +1096,7 @@ c     BM
           end if
         else
           pos_tracer_theta(i) = 2.0_rk * pc_pi - pos_tracer_theta(i)
-          WRITE(9999,*) "CROSS THE UPPER POLAR"
+          WRITE(9999,*) i,"CROSS THE UPPER POLAR"
           WRITE(9999,*) "Position Before:",pos_tracer_theta(i)
      &    ,pos_tracer_phi(i)
           pos_tracer_theta(i) = - pos_tracer_theta(i)

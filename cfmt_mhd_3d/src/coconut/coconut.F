@@ -478,6 +478,7 @@ c         call do_conservation_check
          else
             dt_tmp=0.5_rk*dt_act
          endif
+         call tracer_integral(rk_index,alpha_rk,beta_rk,delta_t)
 
          call rescale_velocities (1)
          
@@ -1127,8 +1128,10 @@ ccc   recover the primitive (physical) variables rho, v^i, W, epsilon
          call recover_primitives
 
       end do
-      call TEST_COMM_3D
+ccc      call TEST_COMM_3D
       call MPI_TRACER_3D
+      call validate_3dcomm
+ccc   VALIDATE FOR 3D
       call MPI_COUNT_PREFIX
 ccc   end of Runge-Kutta loop
 
