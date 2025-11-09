@@ -132,9 +132,9 @@ c     ==================================================================
      &            theta_if(n_s-1),"(",n_s," LEFT)"
                   WRITE(6666,*) "Boundary(Theta RIGHT)",
      &            theta_if(n_e),"(",n_e," RIGHT)"
-            else
-                  WRITE(6666,*) "Tracer",i
-     &            ,"passed the validation(Theta)"
+c            else
+c                  WRITE(6666,*) "Tracer",i
+c     &            ,"passed the validation(Theta)"
             end if
             if(pos_phi<varphi_if(o_s-1).or.pos_phi>varphi_if(o_e)
      &      ) then
@@ -144,9 +144,9 @@ c     ==================================================================
      &            varphi_if(o_s-1),"(",o_s," LEFT)"
                   WRITE(6666,*) "Boundary(Phi RIGHT)",
      &            varphi_if(o_e),"(",o_e," RIGHT)"
-            else
-                  WRITE(6666,*) "Tracer",i
-     &            ,"passed the validation(Phi)"
+c            else
+c                  WRITE(6666,*) "Tracer",i
+c     &            ,"passed the validation(Phi)"
             end if
       end do
 
@@ -353,8 +353,8 @@ c     ==================================================================
       real(KIND=rk), INTENT(IN) :: alpha_rk,beta_rk,delta_t
       WRITE(9999,*) "INTEGRATION START at time:",time," ",nstep
       LOOP_INT:DO i=1,tracer_num
-            WRITE(5555,*) "-------------INTEGRATION FOR TRACER",i,
-     &      "------------------"
+ccc            WRITE(5555,*) "-------------INTEGRATION FOR TRACER",i,
+ccc     &      "------------------"
             call tci_search(i)
             call tci_t_search(i)
             ir = tracer_ci_r(i)
@@ -363,9 +363,9 @@ c     ==================================================================
 #if DIMN == 3
             call tci_p_search(i)
             ip = tracer_ci_phi(i)
-            WRITE(7777,*) "Angle Pre-Integration:",pos_tracer_phi(i)
-            WRITE(7777,*) "Phi Search Result:",ip,"[",varphi_if(ip-1),
-     &      varphi_if(ip),"]"
+CCC            WRITE(5555,*) "Angle Pre-Integration:",pos_tracer_phi(i)
+CCC            WRITE(5555,*) "Phi Search Result:",ip,"[",varphi_if(ip-1),
+CCC     &      varphi_if(ip),"]"
 #endif
             IF((ir.lt.0).or.(ir.gt.m))   THEN
                   CYCLE LOOP_INT
@@ -390,7 +390,7 @@ c     ==================================================================
             v_3_t = linear_interpolation
      &      (v_3(-1:m+1,n_s-1:n_e+1,o_s-1:o_e+1),-1,m+1,n_s-1,
      &      n_e+1,o_s-1,o_e+1,i,.false.,"v_3")
-            WRITE(5555,*) "Interpolate Velocity :",v_1_t,v_2_t,v_3_t
+ccc            WRITE(5555,*) "Interpolate Velocity :",v_1_t,v_2_t,v_3_t
 #endif
             IF((it.lt.n_s))      THEN
                it = n_s
@@ -411,8 +411,8 @@ c     ==================================================================
 #if DIMN==3
             v_3_t = g_up_33(ir,it,ip)*v_3_t-
      &      beta_up_3(ir,it,ip)/alpha(ir,it,ip)  
-            WRITE(5555,*) "Corrected velocity:",v_1_t,v_2_t,
-     &      v_3_t
+ccc            WRITE(5555,*) "Corrected velocity:",v_1_t,v_2_t,
+ccc     &      v_3_t
 #endif
 
             IF(rkint_order.eq.1)    THEN
@@ -426,9 +426,9 @@ c     ==================================================================
                   pos_tracer_phi_old(i) = pos_tracer_phi(i)
                   pos_tracer_phi(i) = pos_tracer_phi_old(i) +
      &            v_3_t*delta_t
-                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
-                  WRITE(5555,*) "Angle:",
-     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+ccc                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
+ccc                  WRITE(5555,*) "Angle:",
+ccc     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
 #endif 
             ELSE IF(rkint_order.eq.2)     THEN
                   pos_tracer_r(i) = (beta_rk * pos_tracer_r_old(i)
@@ -440,9 +440,9 @@ c     ==================================================================
                   pos_tracer_phi(i) = (beta_rk * pos_tracer
      &            _phi_old(i) + pos_tracer_phi(i) + v_3_t
      &            * delta_t)/alpha_rk
-                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
-                  WRITE(5555,*) "Angle:",
-     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+ccc                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
+ccc                  WRITE(5555,*) "Angle:",
+ccc     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
 #endif 
             ELSE IF(rkint_order.eq.3)     THEN
                   pos_tracer_r(i) = 
@@ -455,9 +455,9 @@ c     ==================================================================
                   pos_tracer_phi(i) = (pos_tracer_phi_old(i)
      &            + 2*(pos_tracer_phi(i) + v_3_t * delta_t))/
      &            3.0_rk
-                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
-                  WRITE(5555,*) "Angle:",
-     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+ccc                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
+ccc                  WRITE(5555,*) "Angle:",
+ccc     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
 #endif
             END IF
          pos_tracer_phi(i) = mod(pos_tracer_phi(i),2.0_rk*pc_pi)
@@ -465,7 +465,7 @@ c     ==================================================================
             pos_tracer_phi(i) = pos_tracer_phi(i) + 2.0_rk*pc_pi
          end if
       END DO LOOP_INT
-      WRITE(5555,*) "INTEGRATION FINISHED"
+ccc      WRITE(5555,*) "INTEGRATION FINISHED"
       END SUBROUTINE tracer_integral
 c     ==================================================================
 
@@ -604,17 +604,17 @@ c     ==================================================================
             tci_r = tracer_ci_r(i)
             tci_t = tracer_ci_theta(i)
             tci_p = tracer_ci_phi(i)
-            WRITE(7777,*) "-----------------------"
-            WRITE(7777,*) 'TRACER NO = ', i,'TIME = ', time," ",nstep
-            WRITE(7777,*) 'GLOBAL ID=',tracer_id(i)
-            WRITE(7777,*) 'IPROC = ', tracer_proc(i)
-            WRITE(7777,*) 'position r = ',pos_tracer_r(i),tci_r
-            WRITE(7777,*) 'position theta = ', pos_tracer_theta(i),tci_t
-            WRITE(7777,*) 'position phi = ', pos_tracer_phi(i), tci_p
-            WRITE(7777,*) 'v_r = ',v_1_tracer(i)
-            WRITE(7777,*) 'v_theta = ', v_2_tracer(i)
-            WRITE(7777,*) 'v_phi = ', v_3_tracer(i)
-            WRITE(7777,*) 'SEGEMENT:',n_ts,n_te
+ccc            WRITE(7777,*) "-----------------------"
+ccc            WRITE(7777,*) 'TRACER NO = ', i,'TIME = ', time," ",nstep
+ccc            WRITE(7777,*) 'GLOBAL ID=',tracer_id(i)
+ccc            WRITE(7777,*) 'IPROC = ', tracer_proc(i)
+ccc            WRITE(7777,*) 'position r = ',pos_tracer_r(i),tci_r
+ccc            WRITE(7777,*) 'position theta = ', pos_tracer_theta(i),tci_t
+ccc            WRITE(7777,*) 'position phi = ', pos_tracer_phi(i), tci_p
+ccc            WRITE(7777,*) 'v_r = ',v_1_tracer(i)
+ccc            WRITE(7777,*) 'v_theta = ', v_2_tracer(i)
+ccc            WRITE(7777,*) 'v_phi = ', v_3_tracer(i)
+ccc            WRITE(7777,*) 'SEGEMENT:',n_ts,n_te
       END DO LOOP_PRINT
       END SUBROUTINE tracer_print
 c     ==================================================================
@@ -644,8 +644,8 @@ c     ==================================================================
       ir = tracer_ci_r(ti)
       it = tracer_ci_theta(ti)
       ip = tracer_ci_phi(ti)
-      WRITE(5555,*) "-------------INTERP:",dbg,"------------------"
-      WRITE(5555,*) "Search Index Result:",ir,it,ip
+ccc      WRITE(5555,*) "-------------INTERP:",dbg,"------------------"
+ccc      WRITE(5555,*) "Search Index Result:",ir,it,ip
       xir0 = (pos_r-r_if(ir-1))/delta_r(ir)
       xir1 = 1 - xir0
       xit0 = (pos_t-theta_if(it-1))/delta_theta
@@ -666,7 +666,7 @@ c     ==================================================================
             xip1 = xip1 - floor(xip1)
             xip0 = 1 - xip1
       end if
-      WRITE(5555,*) "Ratios:",xit0,xit1,xip0,xip1
+ccc      WRITE(5555,*) "Ratios:",xit0,xit1,xip0,xip1
 #if DIMN<=2
             val =  xit1*(xir1*arr(ir-1,it-1,1)+xir0*arr(ir,it-1,1))+xit0*
      &     (xir1*arr(ir-1,it,1)+xir0*arr(ir,it,1))
@@ -680,12 +680,12 @@ c     ==================================================================
      &            xir0*xit1*xip0*arr(ir,it-1,ip) +
      &            xir1*xit0*xip0*arr(ir-1,it,ip) +
      &            xir0*xit0*xip0*arr(ir,it,ip)
-      WRITE(5555,*) "8 GRID VALUE:",arr(ir-1,it-1,ip-1),
-     & arr(ir,it-1,ip-1),arr(ir-1,it,ip-1),arr(ir,it,ip-1),
-     & arr(ir-1,it-1,ip),arr(ir,it-1,ip),arr(ir-1,it,ip),
-     & arr(ir,it,ip)
+ccc      WRITE(5555,*) "8 GRID VALUE:",arr(ir-1,it-1,ip-1),
+ccc     & arr(ir,it-1,ip-1),arr(ir-1,it,ip-1),arr(ir,it,ip-1),
+ccc     & arr(ir-1,it-1,ip),arr(ir,it-1,ip),arr(ir-1,it,ip),
+ccc     & arr(ir,it,ip)
 #endif
-      WRITE(5555,*) "INTERP RESULT:",val
+CCC      WRITE(5555,*) "INTERP RESULT:",val
 ccc   add debug sentence
       END FUNCTION linear_interpolation
 c     ==================================================================
@@ -725,15 +725,15 @@ c     ==================================================================
      &      MPI_INTEGER,p_send,prf_tag_send,buffer_recv,
      &      1,MPI_INTEGER,
      &      p_recv,prf_tag_send,MPI_COMM_WORLD,prf_istat,prf_ierr)
-
+            
             if(p_recv.eq.MPI_PROC_NULL) then
                   buffer_recv = 0
             end if 
             sum_prf = sum_prf + buffer_recv
             d = d * 2
       end do
-      tracer_s = sum—prf - tracer_num + 1
-      tracer_e = sum_prf 
+      n_ts = sum_prf - tracer_num + 1
+      n_te = sum_prf 
       WRITE(9999,*) "Tracer Sector:",sum_prf-tracer_num+1,",",sum_prf
       END SUBROUTINE MPI_COUNT_PREFIX
 c     ==================================================================
@@ -771,13 +771,14 @@ c     BM: More efficient to use an array for issent
       integer (kind=ik), parameter :: tag_zr=9703_ik
       
       integer (kind=ik) :: d,d_bit,p_target,d_target
+      WRITE(6666,*) "MPI_TRACER_3D AT STEP:",nstep
       call MPI_TRACER
 
       d = 1
       d_bit = 0
       LOOP_COMM:do while (d*2.le.dims_t(2))
-            WRITE(6666,*) '-----d=',d,'--d_bit:',d_bit
-     &      ,'------Phi Transport------'
+ccc            WRITE(6666,*) '-----d=',d,'--d_bit:',d_bit
+ccc     &      ,'------Phi Transport------'
             nsend_l = 0
             nsend_r = 0
             nrecv_l = 0
@@ -804,48 +805,47 @@ c                 sendrecv number to left and right(cart shift and ... problem: 
                   nsend_l = 0
             end if
 c           if d = phi_process/2, then only right direction is allowed in order to avoid duplicated transport
-            WRITE(6666,*) 'Number of tracers to be sent: left--'
-     &      ,nsend_l,'right---',nsend_r
+ccc            WRITE(6666,*) 'Number of tracers to be sent: left--'
+ccc     &      ,nsend_l,'right---',nsend_r
             allocate(sbuffer_tl(1:nsend_l,1:6),sbuffer_tr(1:nsend_r,1:6)
      &      ,stat=istat)
-            WRITE(6666,*) 'Allocation Send Buffer Finished'
+ccc            WRITE(6666,*) 'Allocation Send Buffer Finished'
             call MPI_Cart_shift(cart_comm,1,d,src_l,dest_r,ierr)
             WRITE(6666,*) 'CART SHIFT +D FOR NUMBER FINISHED'
-            WRITE(6666,*) 
             call MPI_Sendrecv (nsend_r,1,
      &      MPI_INTEGER,dest_r,tag_zr,nrecv_l,
      &      1,MPI_INTEGER,
      &      src_l,tag_zr,cart_comm,mpistat,ierr)
-            WRITE(6666,*) 'SENDRECV +D FOR NUMBER FINISHED'
-            WRITE(6666,*) 'DEST_R:',dest_r,'  SRC_L:',src_l
-            WRITE(6666,*) 'nsend_r',nsend_r,'nrecv_l',nrecv_l
+ccc            WRITE(6666,*) 'SENDRECV +D FOR NUMBER FINISHED'
+ccc            WRITE(6666,*) 'DEST_R:',dest_r,'  SRC_L:',src_l
+ccc            WRITE(6666,*) 'nsend_r',nsend_r,'nrecv_l',nrecv_l
             if(src_l.eq.MPI_PROC_NULL) then
                nrecv_l = 0
-               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
-     &         coords_t(2), "d=",d, "source not exist",coords_t(2)-d
+ccc               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
+ccc     &         coords_t(2), "d=",d, "source not exist",coords_t(2)-d
             end if
-            if(dest_l.eq.MPI_PROC_NULL) then
-               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
-     &         coords_t(2),"d=",d, "dest not exist",coords_t(2)-d
-            end if
+ccc            if(dest_l.eq.MPI_PROC_NULL) then
+ccc               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
+ccc     &         coords_t(2),"d=",d, "dest not exist",coords_t(2)-d
+ccc            end if
             call MPI_Cart_shift(cart_comm,1,-d,src_r,dest_l,ierr)
-            WRITE(6666,*) 'CART SHIFT -D FOR NUMBER FINISHED'
+ccc            WRITE(6666,*) 'CART SHIFT -D FOR NUMBER FINISHED'
             call MPI_Sendrecv (nsend_l,1,
      &      MPI_INTEGER,dest_l,tag_zl,nrecv_r,
      &      1,MPI_INTEGER,
      &      src_r,tag_zl,cart_comm,mpistat,ierr)
-            WRITE(6666,*) 'SENDRECV +D FOR NUMBER FINISHED'
-           WRITE(6666,*) 'DEST_L:',dest_l,'  SRC_R:',src_r
-            WRITE(6666,*) 'nsend_l',nsend_l,'nrecv_l',nrecv_r
+ccc            WRITE(6666,*) 'SENDRECV +D FOR NUMBER FINISHED'
+ccc            WRITE(6666,*) 'DEST_L:',dest_l,'  SRC_R:',src_r
+ccc            WRITE(6666,*) 'nsend_l',nsend_l,'nrecv_l',nrecv_r
             if(src_r.eq.MPI_PROC_NULL) then
                nrecv_r = 0
-               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
-     &         coords_t(2), "d=",d, "source not exist",coords_t(2)-d
+ccc               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
+ccc     &         coords_t(2), "d=",d, "source not exist",coords_t(2)-d
             end if
-            if(dest_r.eq.MPI_PROC_NULL) then
-               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
-     &         coords_t(2),"d=",d, "dest not exist",coords_t(2)-d
-            end if
+ccc            if(dest_r.eq.MPI_PROC_NULL) then
+ccc               WRITE(6666,*) "PROC",myproc," Phi Direction Domain:",
+ccc     &         coords_t(2),"d=",d, "dest not exist",coords_t(2)-d
+ccc            end if
             i_sl = 0
             i_sr = 0
             i_ns = 0
@@ -853,13 +853,13 @@ c           if d = phi_process/2, then only right direction is allowed in order 
      &      - ( nsend_l + nsend_r )
             allocate(buffer_tnew(1:tracer_num_new,1:6),
      &      stat=istat)
-            WRITE(6666,*) 'Number Send and Recv Finished'
-            WRITE(6666,*) 'New tracer Num:',tracer_num_new
-     &      ,"[old:",tracer_num,"]"
-            WRITE(6666,*) 'Sent to Left:',nsend_l,
-     &      'Send to Right:',nsend_r
-            WRITE(6666,*) 'Recv From Left:',nrecv_l,
-     &      'Recv From Right:',nrecv_r
+ccc            WRITE(6666,*) 'Number Send and Recv Finished'
+ccc            WRITE(6666,*) 'New tracer Num:',tracer_num_new
+ccc     &      ,"[old:",tracer_num,"]"
+ccc            WRITE(6666,*) 'Sent to Left:',nsend_l,
+ccc     &      'Send to Right:',nsend_r
+ccc            WRITE(6666,*) 'Recv From Left:',nrecv_l,
+ccc     &      'Recv From Right:',nrecv_r
 
             do i=1,tracer_num
                   p_target = varphi_target(i)
@@ -908,40 +908,40 @@ c                     WRITE(6666,*) 'R:',buffer_tnew(i_sr,2)
 c                     WRITE(6666,*) 'Phi:',buffer_tnew(i_sr,6)
                   end if 
             end do
-            WRITE(6666,*) "Send Check:Left Size",size(sbuffer_tl,1)
-            WRITE(6666,*) "Send Check:Right Size",size(sbuffer_tr,1)
+ccc            WRITE(6666,*) "Send Check:Left Size",size(sbuffer_tl,1)
+ccc            WRITE(6666,*) "Send Check:Right Size",size(sbuffer_tr,1)
             allocate(rbuffer_tl(1:nrecv_l,1:6),
      &      rbuffer_tr(1:nrecv_r,1:6),stat=istat)
-            WRITE(6666,*) "Allocation For Recv Buffer Finished"
+ccc            WRITE(6666,*) "Allocation For Recv Buffer Finished"
             call MPI_Cart_shift(cart_comm,1,d,src_l,dest_r,ierr)
-            WRITE(6666,*) "CART SHIFT +d FINISHED"
+ccc            WRITE(6666,*) "CART SHIFT +d FINISHED"
             call MPI_Sendrecv (sbuffer_tr,nsend_r*6,
      &      MPI_DOUBLE_PRECISION,dest_r,tag_zr,rbuffer_tl,
      &      nrecv_l*6,MPI_DOUBLE_PRECISION,
      &      src_l,tag_zr,cart_comm,mpistat,ierr)
-            WRITE(6666,*) "SENDRECV +d finished"
+ccc            WRITE(6666,*) "SENDRECV +d finished"
             call MPI_Cart_shift(cart_comm,1,-d,src_r,dest_l,ierr)
-            WRITE(6666,*) "CART SHIFT -d FINISHED"
+ccc            WRITE(6666,*) "CART SHIFT -d FINISHED"
             call MPI_Sendrecv (sbuffer_tl,nsend_l*6,
      &      MPI_DOUBLE_PRECISION,dest_l,tag_zl,rbuffer_tr,
      &      nrecv_r*6,MPI_DOUBLE_PRECISION,
      &      src_r,tag_zl,cart_comm,mpistat,ierr)
-            WRITE(6666,*) "SENDRECV -d finished"
+ccc            WRITE(6666,*) "SENDRECV -d finished"
             buffer_tnew(i_ns+1:i_ns+nrecv_l,:) = rbuffer_tl(:,:)
             buffer_tnew(i_ns+nrecv_l+1:tracer_num_new,:) 
      &      = rbuffer_tr(:,:)
-            WRITE(6666,*) "i_ns",i_ns,"i_ns+nrecv_l+nrecv_r",i_ns+
-     &      nrecv_l+nrecv_r,'total:',tracer_num_new
-            WRITE(6666,*) "Recv Check:Left Size",size(rbuffer_tl,1)
-            WRITE(6666,*) "Recv Check:Right Size",size(rbuffer_tr,1)
-            WRITE(6666,*) "Allocate Status:",allocated(tracer_id)
+ccc            WRITE(6666,*) "i_ns",i_ns,"i_ns+nrecv_l+nrecv_r",i_ns+
+ccc     &      nrecv_l+nrecv_r,'total:',tracer_num_new
+ccc            WRITE(6666,*) "Recv Check:Left Size",size(rbuffer_tl,1)
+ccc            WRITE(6666,*) "Recv Check:Right Size",size(rbuffer_tr,1)
+ccc            WRITE(6666,*) "Allocate Status:",allocated(tracer_id)
             
            deallocate(tracer_id,pos_tracer_r,pos_tracer_theta,
      &      pos_tracer_phi,
      &     tracer_ci_r,tracer_ci_theta,tracer_ci_phi,tracer_proc,
      &     pos_tracer_r_old,pos_tracer_theta_old,pos_tracer_phi_old,
      &     v_1_tracer,v_2_tracer,v_3_tracer)
-           WRITE(6666,*) "Deallocation Finished"
+ccc           WRITE(6666,*) "Deallocation Finished"
 
            allocate(
      &     tracer_id(tracer_num_new),
@@ -960,7 +960,7 @@ c                     WRITE(6666,*) 'Phi:',buffer_tnew(i_sr,6)
      &     v_3_tracer(tracer_num_new),
      &     stat=istat)
            
-           WRITE(6666,*) "Allocation Finished"
+ccc           WRITE(6666,*) "Allocation Finished"
            tracer_id = buffer_tnew(:,1)
            pos_tracer_r = buffer_tnew(:,2)
            pos_tracer_theta = buffer_tnew(:,3)
@@ -968,20 +968,21 @@ c                     WRITE(6666,*) 'Phi:',buffer_tnew(i_sr,6)
            tracer_proc = buffer_tnew(:,5)
            pos_tracer_phi = buffer_tnew(:,6)
            tracer_num = tracer_num_new
-           WRITE(6666,*) "New Tracer Finished"
+ccc           WRITE(6666,*) "New Tracer Finished"
            
            d = d * 2
            d_bit = d_bit + 1
             
            deallocate(sbuffer_tl,sbuffer_tr,rbuffer_tl,rbuffer_tr,
      &     buffer_tnew)
-           WRITE(6666,*) "Deallocate Finished, Waiting for next round"
+ccc           WRITE(6666,*) "Deallocate Finished, Waiting for next round"
       end do LOOP_COMM
 
       do i=1,tracer_num
          call tci_t_search(i)
          call tci_p_search(i)
       end do
+      WRITE(6666,*) "MPI_TRACER_3D FINISHED"
       
 
       

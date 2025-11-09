@@ -210,6 +210,9 @@ subroutine write_output_files
   use configure
   use state
   use print_stdout_mod
+
+  
+  use tracer_cfc, only : tracer_num, n_ts, n_te, tracer_id, pos_tracer_r, pos_tracer_theta, pos_tracer_phi,tracer_total
   implicit none
 ! LOCAL variables that are not in modules
 

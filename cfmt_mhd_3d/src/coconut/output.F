@@ -35,7 +35,9 @@ c     ==================================================================
 #ifdef MPI_HYDRO
       USE mo_mpi
 #endif
-
+      
+      USE tracer_cfc
+      
       use configure
       IMPLICIT NONE
 
@@ -175,7 +177,7 @@ c     ==================================================================
      &  "index",(/n_ts,n_te/),(/1,tracer_total/))
       write(8888,*) "Restart output for Proc:",myproc,"sector:[",
      & n_ts,",",n_te,"] total:",tracer_total
-     
+
       call close_data_file(fd)
 
       return

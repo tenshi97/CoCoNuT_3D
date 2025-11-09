@@ -65,7 +65,7 @@ c     &  trnum_rstrt
       OPEN(UNIT=8888,FILE=dfilename)
       open(UNIT=9999,FILE=mpifilename)
       open(UNIT=6666,FILE=mpi3d)
-      open(UNIT=5555,FILE=interpdebug)
+ccc      open(UNIT=5555,FILE=interpdebug)
       if(tracer_rstrt) then
         return 
       end if
