@@ -1030,6 +1030,7 @@ subroutine read_parameter_files(read_mode)
   call read_line(1,print_it)
   
   call read_line(1,print_it,"trpp",config%trpp)
+  call read_line(1,print_it,"pmod",config%pmod)
 
   if (trim(read_mode) .eq. "grid_init") then
      ! we only had to read until here in this mode
