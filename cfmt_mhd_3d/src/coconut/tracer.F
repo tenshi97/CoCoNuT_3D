@@ -734,6 +734,8 @@ c     ==================================================================
       end do
       n_ts = sum_prf - tracer_num + 1
       n_te = sum_prf 
+      sect(1) = n_ts
+      sect(2) = n_te
       WRITE(9999,*) "Tracer Sector:",sum_prf-tracer_num+1,",",sum_prf
       END SUBROUTINE MPI_COUNT_PREFIX
 c     ==================================================================

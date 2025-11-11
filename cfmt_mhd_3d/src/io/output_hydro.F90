@@ -210,9 +210,10 @@ subroutine write_output_files
   use configure
   use state
   use print_stdout_mod
+  USE mo_mpi, only: nprocs
 
   
-  use tracer_cfc, only : tracer_num, n_ts, n_te, tracer_id, pos_tracer_r, pos_tracer_theta, pos_tracer_phi,tracer_total
+  use tracer_cfc, only : tracer_num, n_ts, n_te, tracer_id, pos_tracer_r, pos_tracer_theta, pos_tracer_phi,tracer_total,sect
   implicit none
 ! LOCAL variables that are not in modules
 
@@ -447,6 +448,10 @@ subroutine write_output_files
        "index",(/n_ts,n_te/),(/1,tracer_total/))   
 
      write(8888,*) "proc:",myproc,"sector:[",n_ts,",",n_te,"] total:",tracer_total
+     write(8888,*) myproc*2+1,myproc*2+2,nprocs*2
+
+      call writeq(hfile,"sect",sect,"Sector","1",&  
+      "index",(/myproc*2+1,myproc*2+2/),(/1,nprocs*2/))
      
      call writeq(hfile, "tm", tm, "Enclosed baryonic mass", "solarmass", "radius:xzn")
      call writeq(hfile, "tgm", tgm, "Enclosed gravitational mass", "solarmass", "radius:xzn")

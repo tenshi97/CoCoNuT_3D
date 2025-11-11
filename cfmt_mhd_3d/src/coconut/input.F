@@ -57,6 +57,14 @@ c     ==================================================================
       integer (kind=ik) :: i, j, k, l
       logical :: perturb
 
+      integer :: istat
+      integer (kind=ik) :: trnum_rstrt
+      integer (kind=ik), allocatable :: trid_rstrt(:)
+      real(kind=rk), allocatable :: trx_rstrt(:)
+      real(kind=rk), allocatable :: try_rstrt(:)
+      real(kind=rk), allocatable :: trz_rstrt(:)
+      integer (kind=ik), allocatable :: sect_rstrt(:)
+
 #ifdef READ_OLD_RESTART_FILES 
       real (kind=ik) ::
      &     phi_last_metric (0:m+1,0:n+1,1:o,1:3),
@@ -186,7 +194,12 @@ c      print *,'psi'
      &  psi_old (1 : m, n_s : n_e, o_s : o_e)
       
 #endif /* CFC_MHD */
-
+c     TRACER MODULE
+      call readq(fd, "trnum", trnum_rstrt)
+      allocate(sect_rstrt(nprocs*2),stat=istat)
+      call readq(fd, "sect", sect_rstrt)
+      call readq()
+c     TRACER MODULE
 
       print *,'Closing file'
       call close_data_file(fd)

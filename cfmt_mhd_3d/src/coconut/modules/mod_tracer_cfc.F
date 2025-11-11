@@ -29,6 +29,7 @@ c     ============================================================
       integer (kind=ik) :: n_ts,n_te
       INTEGER (KIND=ik) :: coords_t (2)
       INTEGER (KIND=ik) :: dims_t (2)
+      INTEGER (KIND=ik) :: sect(2)
       LOGICAL :: periods_t (2)
       INTEGER (KIND=ik) :: ierr_t
       INTEGER (kind=ik) :: sum_prf
@@ -105,6 +106,8 @@ ccc      open(UNIT=5555,FILE=interpdebug)
       tracer_ci_theta =-2_ik
       n_ts = myproc*tracer_num+1
       n_te = myproc*tracer_num+tracer_num
+      sect(1) = n_ts
+      sect(2) = n_te
       do i=1,tracer_num
         tracer_id(i) = myproc*tracer_num+i
       end do

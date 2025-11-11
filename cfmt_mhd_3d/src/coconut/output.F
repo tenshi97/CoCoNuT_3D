@@ -24,7 +24,6 @@ c     ==================================================================
       USE conserved_cfc
       USE metric_cfc
       USE nutra_cfc
-      
       USE nucparam, only : name_xnuc
 
       USE charac
@@ -176,7 +175,10 @@ c     ==================================================================
       call writeq(fd,"trz",pos_tracer_phi,"Tr Z","cm",
      &  "index",(/n_ts,n_te/),(/1,tracer_total/))
       write(8888,*) "Restart output for Proc:",myproc,"sector:[",
-     & n_ts,",",n_te,"] total:",tracer_total
+     & n_ts,",",n_te,"] total:",tracer_total,myproc*2+1,
+     & myproc*2+2,nprocs*2
+      call writeq(fd,"sect",sect,"Sector","1",
+     &  "index",(/myproc*2+1,myproc*2+2/),(/1,nprocs*2/))
 
       call close_data_file(fd)
 
