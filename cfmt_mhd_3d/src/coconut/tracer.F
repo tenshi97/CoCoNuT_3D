@@ -36,14 +36,22 @@ c     tracer_ci_r(i)--->the i-th tracer's cell index initialized as -2
       INTEGER (kind=ik) tci_r
       INTEGER (kind=ik), INTENT(IN) :: tracer_index
       REAL (kind=rk) :: pos_r
+ccc      print *,"tci_search for",tracer_index
+ccc      write(8888,*) "tci_search for",tracer_index
+ccc      write(8888,*) "tci array size:",size(tracer_ci_r)
+ccc      write(8888,*) "pos_tracer_r size:",size(pos_tracer_r)
       pos_r = pos_tracer_r(tracer_index)
+ccc      write(8888,*) "pos_r:",pos_r
       tci_r = tracer_ci_r(tracer_index)
+ccc      write(8888,*) "tci_r:",tci_r
       if(tci_r.lt.0) then
+            write(8888,*) "go into bisection"
             tracer_ci_r(tracer_index) = tci_search_bisection(pos_r)
       else
             if(tci_r.gt.1) then
                   if(pos_r.lt.r_if(tci_r-1)) then
                         if(pos_r.gt.r_if(tci_r-2)) then
+ccc                              write(8888,*) "Left:",tci_r-1
                               tracer_ci_r(tracer_index) = tci_r-1
                         else
                               tracer_ci_r(tracer_index) = 
@@ -57,6 +65,7 @@ c     tracer_ci_r(i)--->the i-th tracer's cell index initialized as -2
             if(tci_r.lt.m) then
                   if(pos_r.gt.r_if(tci_r)) then
                         if(pos_r.lt.r_if(tci_r+1)) then
+ccc                              write(8888,*) "Right:",tci_r+1
                               tracer_ci_r(tracer_index) = tci_r+1
                         else
                               tracer_ci_r(tracer_index) = 
@@ -90,8 +99,10 @@ c     ==================================================================
       INTEGER (KIND=ik) :: startPointer, endPointer, midPointer
       startPointer = 1
       endPointer = m
+ccc      write(8888,*) "tci_search_bisection:",r_tracer
       IF(r_tracer<=r_if(0).or.r_tracer>=r_if(m)) THEN
             tci_search_bisection = -1
+ccc            write(8888,*) "out of bound"
             RETURN
       END IF
       FINDER_LOOP: DO WHILE (startPointer<endPointer)
@@ -103,7 +114,7 @@ c     ==================================================================
                         END IF
                   END DO FINDER_LOOP
                   tci_search_bisection = startPointer
-                  
+      write(8888,*) tci_search_bisection
       END FUNCTION tci_search_bisection
 
 c     ==================================================================
@@ -736,7 +747,9 @@ c     ==================================================================
       n_te = sum_prf 
       sect(1) = n_ts
       sect(2) = n_te
-      WRITE(9999,*) "Tracer Sector:",sum_prf-tracer_num+1,",",sum_prf
+      print *,"Step:",nstep
+      print *,"Tracer Number:",tracer_num
+      print *,"Tracer Sector:","(",n_ts,",",n_te,")"
       END SUBROUTINE MPI_COUNT_PREFIX
 c     ==================================================================
       SUBROUTINE MPI_TRACER_3D()
@@ -1113,7 +1126,7 @@ c     BM
         end if
       end do
       if(nsl/=nsend_l.or.nsr/=nsend_r) then
-            WRITE(9999,*) "ERROR:SNED NUM IS NOT AS EXPECTED"
+            WRITE(9999,*) "ERROR:SEND NUM IS NOT AS EXPECTED"
       end if
       WRITE(9999,*) "SBUFFER FINISHED"
 

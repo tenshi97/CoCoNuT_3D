@@ -1129,6 +1129,7 @@ ccc   recover the primitive (physical) variables rho, v^i, W, epsilon
 
       end do
 ccc      call TEST_COMM_3D
+      print *,"test before MPI_TRACER_3D"
       call MPI_TRACER_3D
       call validate_3dcomm
 ccc   VALIDATE FOR 3D

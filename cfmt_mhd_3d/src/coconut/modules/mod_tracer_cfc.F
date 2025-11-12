@@ -51,7 +51,7 @@ c     &  trnum_rstrt
       integer :: istat
       integer(kind=ik) :: i,j
       character*64 :: dfilename,procstr,outfilename,mpifilename
-      character*64 :: suffix,mpi3d,interpdebug
+      character*64 :: suffix,mpi3d,rsfilename
       logical, intent(in) :: tracer_rstrt
       integer(kind=ik) :: log2proc
       suffix = 'dat'
@@ -60,17 +60,20 @@ c     &  trnum_rstrt
       outfilename = 'debugmpi/file'//procstr // '.'//suffix
       dfilename = 'debugmpi/debug'// procstr // '.'//suffix
       mpifilename = 'debugmpi/mpi' // procstr // '.'//suffix
-      mpi3d = 'debugmpi/3d' //procstr 
-      interpdebug = 'debugmpi/integration' //procstr
+      mpi3d = 'debugmpi/3d' //procstr
+      mpi3d = mpi3d // '.dat'
+      rsfilename = 'debugmpi/rstrt'// procstr
+      rsfilename = rsfilename // procstr
       OPEN(UNIT=7777,FILE=outfilename)
       OPEN(UNIT=8888,FILE=dfilename)
       open(UNIT=9999,FILE=mpifilename)
       open(UNIT=6666,FILE=mpi3d)
-ccc      open(UNIT=5555,FILE=interpdebug)
+      open(UNIT=5555,FILE=rsfilename)
       tracer_pp = config%trpp
       qyrays_t = n_e-n_s+1
       qzrays_t = o_e-o_s+1
       if(tracer_rstrt) then
+        write(5555,*) "Restart, Skip Initializing"
         return 
       end if
       tracer_total = tracer_pp * nprocs
@@ -104,6 +107,7 @@ ccc      open(UNIT=5555,FILE=interpdebug)
      &  stat=istat)
       tracer_ci_r = -2_ik
       tracer_ci_theta =-2_ik
+      tracer_ci_phi = -2_ik
       n_ts = myproc*tracer_num+1
       n_te = myproc*tracer_num+tracer_num
       sect(1) = n_ts

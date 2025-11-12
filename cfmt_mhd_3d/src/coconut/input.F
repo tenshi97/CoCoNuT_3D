@@ -49,7 +49,8 @@ c     ==================================================================
       
       use configure 
       USE gfloat_hy, ONLY: time
-
+      USE tracer_cfc
+      USE tracer, only: tci_search,tci_t_search,tci_p_search
       IMPLICIT NONE
 
       type(datafile) :: fd
@@ -195,9 +196,11 @@ c      print *,'psi'
       
 #endif /* CFC_MHD */
 c     TRACER MODULE
-      write(7777,*) "Rstrt Tracer Info:"
+      print *,"start reading tracers"
+      call allocate_tracer_arrays(.true.)
+      write(5555,*) "Rstrt Tracer Info:"
       call readq(fd, "trnum", trnum_rstrt)
-      write(7777,*) "Total tracers:",trnum_rstrt
+      write(5555,*) "Total tracers:",trnum_rstrt
       tracer_total = trnum_rstrt
       allocate(sect_rstrt(nprocs*2),stat=istat)
       call readq(fd, "sect", sect_rstrt)
@@ -205,33 +208,74 @@ c     TRACER MODULE
       sect(2) = sect_rstrt(2*myproc+2)
       n_ts = sect(1)
       n_te = sect(2)
-      write(7777,*) "Tracer Sector:",n_ts,",",n_te
+      write(5555,*) "Tracer Sector:",n_ts,",",n_te
+      print *,"Tracer Sector:",n_ts,",",n_te
       tracer_num = n_te - n_ts + 1
-      write(7777,*) "Tracer Num of Process",tracer_num
+      write(5555,*) "Tracer Num of Process",tracer_num
+      print *,"Restart Tracer Num:",tracer_num
+      allocate(
+     &  pos_tracer_r(tracer_num),
+     &  pos_tracer_r_old(tracer_num),
+     &  pos_tracer_theta(tracer_num),
+     &  pos_tracer_theta_old(tracer_num),
+     &  pos_tracer_phi(tracer_num),
+     &  pos_tracer_phi_old(tracer_num),
+     &  v_1_tracer(tracer_num),
+     &  v_2_tracer(tracer_num),
+     &  v_3_tracer(tracer_num),
+     &  tracer_ci_r(tracer_num),
+     &  tracer_ci_theta(tracer_num),
+     &  tracer_ci_phi(tracer_num),
+     &  tracer_id(tracer_num),
+     &  tracer_proc(tracer_num),
+     &  stat=istat)
+      write(5555,*) "Reallocation Finished"
+      print *,"Reallocation Finished"
       call readq(fd,"trid",tracer_id(1:tracer_num),
      & (/n_ts,n_te/), 
      & (/1,tracer_total/)
      & )
+      print *,"trid"
       call readq(fd,"trx",pos_tracer_r(1:tracer_num),
      & (/n_ts,n_te/), 
      & (/1,tracer_total/)
      & )
+      print *,"trx"
       call readq(fd,"try",pos_tracer_theta(1:tracer_num),
      & (/n_ts,n_te/), 
      & (/1,tracer_total/)
      & )
+      print *,"try"
       call readq(fd,"trz",pos_tracer_phi(1:tracer_num),
      & (/n_ts,n_te/), 
      & (/1,tracer_total/)
      & )
-
+      print *,"trz"
+      write(5555,*) "Tracer Reading Finished"
+      tracer_ci_r = -2_ik
+      tracer_ci_theta =-2_ik
+      tracer_ci_phi = -2_ik
+      do i=1,tracer_num
+            print *,"tracer:",tracer_id(i)
+            write(5555,*) "Tracer ID:",tracer_id(i)
+            write(5555,*) "Coord R:",pos_tracer_r(i)
+            write(5555,*) "Coord Theta:",pos_tracer_theta(i)
+            write(5555,*) "Coord Phi:",pos_tracer_phi(i)
+            call tci_search(i)
+            call tci_t_search(i)
+            call tci_p_search(i)
+            write(5555,*) "Cell Index:(",tracer_ci_r(i),
+     &      ",",tracer_ci_theta(i),",",tracer_ci_phi(i),")"
+            write(5555,*) "-----------------------------"
+      end do
 c     TRACER MODULE
-
+      print *,"tracer reading finished"
+      deallocate(sect_rstrt)
       print *,'Closing file'
       call close_data_file(fd)
-
+      write(5555,*) "Closing Input file"
 #else /* READ_OLD_RESTART_FILES */
-
+      print *,"reading test 1"
       open (11, file = rstfil_cfc, form = 'unformatted')
  
       read (11) d_cap_hat (1:m,1:n,1:o),
@@ -258,7 +302,7 @@ c     TRACER MODULE
       close (11)
 
 #endif /* READ_OLD_RESTART_FILES */
-
+      print *,"reading test 2"
       do i=1,config%qn
          d_cap_xnu_hat (1:m,n_s:n_e,o_s:o_e,i)=
      &   d_cap_hat     (1:m,n_s:n_e,o_s:o_e)*
