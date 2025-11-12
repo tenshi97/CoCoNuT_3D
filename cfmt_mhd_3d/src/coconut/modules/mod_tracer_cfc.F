@@ -67,14 +67,14 @@ c     &  trnum_rstrt
       open(UNIT=9999,FILE=mpifilename)
       open(UNIT=6666,FILE=mpi3d)
 ccc      open(UNIT=5555,FILE=interpdebug)
+      tracer_pp = config%trpp
+      qyrays_t = n_e-n_s+1
+      qzrays_t = o_e-o_s+1
       if(tracer_rstrt) then
         return 
       end if
-      tracer_pp = config%trpp
-      tracer_num = tracer_pp
       tracer_total = tracer_pp * nprocs
-      qyrays_t = n_e-n_s+1
-      qzrays_t = o_e-o_s+1
+      tracer_num = tracer_pp
 
       CALL MPI_Cart_get (cart_comm, 2_ik, dims_t, periods_t,
      &     coords_t, ierr_t)

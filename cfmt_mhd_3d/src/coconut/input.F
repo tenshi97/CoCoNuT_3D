@@ -195,10 +195,36 @@ c      print *,'psi'
       
 #endif /* CFC_MHD */
 c     TRACER MODULE
+      write(7777,*) "Rstrt Tracer Info:"
       call readq(fd, "trnum", trnum_rstrt)
+      write(7777,*) "Total tracers:",trnum_rstrt
+      tracer_total = trnum_rstrt
       allocate(sect_rstrt(nprocs*2),stat=istat)
       call readq(fd, "sect", sect_rstrt)
-      call readq()
+      sect(1) = sect_rstrt(2*myproc+1)
+      sect(2) = sect_rstrt(2*myproc+2)
+      n_ts = sect(1)
+      n_te = sect(2)
+      write(7777,*) "Tracer Sector:",n_ts,",",n_te
+      tracer_num = n_te - n_ts + 1
+      write(7777,*) "Tracer Num of Process",tracer_num
+      call readq(fd,"trid",tracer_id(1:tracer_num),
+     & (/n_ts,n_te/), 
+     & (/1,tracer_total/)
+     & )
+      call readq(fd,"trx",pos_tracer_r(1:tracer_num),
+     & (/n_ts,n_te/), 
+     & (/1,tracer_total/)
+     & )
+      call readq(fd,"try",pos_tracer_theta(1:tracer_num),
+     & (/n_ts,n_te/), 
+     & (/1,tracer_total/)
+     & )
+      call readq(fd,"trz",pos_tracer_phi(1:tracer_num),
+     & (/n_ts,n_te/), 
+     & (/1,tracer_total/)
+     & )
+
 c     TRACER MODULE
 
       print *,'Closing file'
