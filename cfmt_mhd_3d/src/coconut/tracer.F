@@ -45,7 +45,7 @@ ccc      write(8888,*) "pos_r:",pos_r
       tci_r = tracer_ci_r(tracer_index)
 ccc      write(8888,*) "tci_r:",tci_r
       if(tci_r.lt.0) then
-            write(8888,*) "go into bisection"
+ccc            write(8888,*) "go into bisection"
             tracer_ci_r(tracer_index) = tci_search_bisection(pos_r)
       else
             if(tci_r.gt.1) then
