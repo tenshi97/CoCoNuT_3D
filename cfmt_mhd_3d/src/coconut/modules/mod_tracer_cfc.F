@@ -51,24 +51,25 @@ c     &  trnum_rstrt
       integer :: istat
       integer(kind=ik) :: i,j
       character*64 :: dfilename,procstr,outfilename,mpifilename
-      character*64 :: suffix,mpi3d,rsfilename
+      character*64 :: mpi3d,rsfilename,interpf,integrationf
       logical, intent(in) :: tracer_rstrt
       integer(kind=ik) :: log2proc
-      suffix = 'dat'
       WRITE(unit=procstr,fmt='(i4)') myproc
       procstr = trim(adjustl(procstr))
-      outfilename = 'debugmpi/file'//procstr // '.'//suffix
-      dfilename = 'debugmpi/debug'// procstr // '.'//suffix
-      mpifilename = 'debugmpi/mpi' // procstr // '.'//suffix
+      outfilename = 'debugmpi/file'//procstr
+      dfilename = 'debugmpi/debug'// procstr
+      mpifilename = 'debugmpi/mpi' // procstr
       mpi3d = 'debugmpi/3d' //procstr
-      mpi3d = mpi3d // '.dat'
       rsfilename = 'debugmpi/rstrt'// procstr
-      rsfilename = rsfilename // procstr
+      interpf = 'debugmpi/interp' //procstr
+      integrationf = 'debugmpi/integration'//procstr
       OPEN(UNIT=7777,FILE=outfilename)
       OPEN(UNIT=8888,FILE=dfilename)
       open(UNIT=9999,FILE=mpifilename)
       open(UNIT=6666,FILE=mpi3d)
       open(UNIT=5555,FILE=rsfilename)
+      open(UNIT=4444,FILE=interpf)
+      open(UNIT=3333,FILE=integrationf)
       tracer_pp = config%trpp
       qyrays_t = n_e-n_s+1
       qzrays_t = o_e-o_s+1

@@ -364,8 +364,8 @@ c     ==================================================================
       real(KIND=rk), INTENT(IN) :: alpha_rk,beta_rk,delta_t
       WRITE(9999,*) "INTEGRATION START at time:",time," ",nstep
       LOOP_INT:DO i=1,tracer_num
-ccc            WRITE(5555,*) "-------------INTEGRATION FOR TRACER",i,
-ccc     &      "------------------"
+            WRITE(3333,*) "-------------INTEGRATION FOR TRACER",i,
+     &      "------------------"
             call tci_search(i)
             call tci_t_search(i)
             ir = tracer_ci_r(i)
@@ -374,9 +374,8 @@ ccc     &      "------------------"
 #if DIMN == 3
             call tci_p_search(i)
             ip = tracer_ci_phi(i)
-CCC            WRITE(5555,*) "Angle Pre-Integration:",pos_tracer_phi(i)
-CCC            WRITE(5555,*) "Phi Search Result:",ip,"[",varphi_if(ip-1),
-CCC     &      varphi_if(ip),"]"
+            WRITE(3333,*) "Angle Pre-Integration:",
+     &      pos_tracer_theta(i),pos_tracer_phi(i)
 #endif
             IF((ir.lt.0).or.(ir.gt.m))   THEN
                   CYCLE LOOP_INT
@@ -401,7 +400,7 @@ CCC     &      varphi_if(ip),"]"
             v_3_t = linear_interpolation
      &      (v_3(-1:m+1,n_s-1:n_e+1,o_s-1:o_e+1),-1,m+1,n_s-1,
      &      n_e+1,o_s-1,o_e+1,i,.false.,"v_3")
-ccc            WRITE(5555,*) "Interpolate Velocity :",v_1_t,v_2_t,v_3_t
+            WRITE(3333,*) "Interpolate Velocity :",v_1_t,v_2_t,v_3_t
 #endif
             IF((it.lt.n_s))      THEN
                it = n_s
@@ -412,63 +411,110 @@ ccc            WRITE(5555,*) "Interpolate Velocity :",v_1_t,v_2_t,v_3_t
             IF(ip.lt.o_s)     THEN
                ip = o_s
             ELSE IF(ip.gt.o_e)      THEN
-               it = o_e
+               ip = o_e
             END IF
-            
+            WRITE(3333,*) "Cell Index:",ir,it,ip
+            WRITE(3333,*) "Alpha:",alpha(ir,it,ip)
             v_1_t = g_up_11(ir,it,ip)*v_1_t - 
      &      beta_up_1(ir,it,ip)/alpha(ir,it,ip)
+            WRITE(3333,*) "Geometric1:",
+     &      g_up_11(ir,it,ip),beta_up_1(ir,it,ip)
+
             v_2_t = g_up_22(ir,it,ip)*v_2_t-
      &      beta_up_2(ir,it,ip)/alpha(ir,it,ip)
+            WRITE(3333,*) "Geometric2:",
+     &      g_up_22(ir,it,ip),beta_up_2(ir,it,ip)
 #if DIMN==3
             v_3_t = g_up_33(ir,it,ip)*v_3_t-
      &      beta_up_3(ir,it,ip)/alpha(ir,it,ip)  
-ccc            WRITE(5555,*) "Corrected velocity:",v_1_t,v_2_t,
-ccc     &      v_3_t
+            WRITE(3333,*) "Geometric3:",
+     &      g_up_33(ir,it,ip),beta_up_3(ir,it,ip)
+     
+            WRITE(3333,*) "Corrected velocity:",v_1_t,v_2_t,
+     &      v_3_t
 #endif
 
             IF(rkint_order.eq.1)    THEN
+                  WRITE(3333,*) "RK1"
                   pos_tracer_r_old(i) = pos_tracer_r(i)
                   pos_tracer_r(i) = pos_tracer_r_old(i) + 
      &            v_1_t*delta_t
+                  WRITE(3333,*) "Radial Velocity and dt",
+     &            v_1_t,delta_t,v_1_t*delta_t
+                  WRITE(3333,*) "Radius Before and After:",
+     &            pos_tracer_r_old(i),pos_tracer_r(i)
+
                   pos_tracer_theta_old(i) = pos_tracer_theta(i)
                   pos_tracer_theta(i) = pos_tracer_theta_old(i) +
      &            v_2_t*delta_t
+                  WRITE(3333,*) "Theta Velocity and dt",
+     &            v_2_t,delta_t,v_2_t*delta_t
+                  WRITE(3333,*) "Theta Angle Before and After:",
+     &            pos_tracer_theta_old(i),pos_tracer_theta(i)
 #if DIMN==3
                   pos_tracer_phi_old(i) = pos_tracer_phi(i)
                   pos_tracer_phi(i) = pos_tracer_phi_old(i) +
      &            v_3_t*delta_t
-ccc                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
-ccc                  WRITE(5555,*) "Angle:",
-ccc     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+                  WRITE(3333,*) "Phi Velocity and dt",
+     &            v_3_t,delta_t,v_3_t*delta_t
+                  WRITE(3333,*) "Phi Angle Before and After:",
+     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
 #endif 
             ELSE IF(rkint_order.eq.2)     THEN
+                  WRITE(3333,*) "RK2"
                   pos_tracer_r(i) = (beta_rk * pos_tracer_r_old(i)
      &            + pos_tracer_r(i)+ v_1_t * delta_t)/alpha_rk
+                  WRITE(3333,*) "Radial Velocity and dt",
+     &            v_1_t,delta_t,v_1_t*delta_t
+                  WRITE(3333,*) "Radius Before and After:",
+     &            pos_tracer_r_old(i),pos_tracer_r(i)
+
                   pos_tracer_theta(i) = (beta_rk * pos_tracer
      &            _theta_old(i) + pos_tracer_theta(i) + v_2_t
      &            * delta_t)/alpha_rk
+                  WRITE(3333,*) "Theta Velocity and dt",
+     &            v_2_t,delta_t,v_2_t*delta_t
+                  WRITE(3333,*) "Theta Angle Before and After:",
+     &            pos_tracer_theta_old(i),pos_tracer_theta(i)
+
 #if DIMN==3
                   pos_tracer_phi(i) = (beta_rk * pos_tracer
      &            _phi_old(i) + pos_tracer_phi(i) + v_3_t
      &            * delta_t)/alpha_rk
-ccc                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
-ccc                  WRITE(5555,*) "Angle:",
-ccc     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+                  WRITE(3333,*) "Phi Velocity and dt",
+     &            v_3_t,delta_t,v_3_t*delta_t
+                  WRITE(3333,*) "Phi Angle Before and After:",
+     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+
 #endif 
             ELSE IF(rkint_order.eq.3)     THEN
+                  WRITE(3333,*) "RK3"
                   pos_tracer_r(i) = 
      &            (pos_tracer_r_old(i)+2*(pos_tracer_r(i)
      &            +v_1_t * delta_t)) / 3.0_rk
+                  WRITE(3333,*) "Radial Velocity and dt",
+     &            v_1_t,delta_t,v_1_t*delta_t
+                  WRITE(3333,*) "Radius Before and After:",
+     &            pos_tracer_r_old(i),pos_tracer_r(i)
+
+
                   pos_tracer_theta(i) = (pos_tracer_theta_old(i)
      &            + 2*(pos_tracer_theta(i) + v_2_t * delta_t))/
      &            3.0_rk
+                  WRITE(3333,*) "Theta Velocity and dt",
+     &            v_2_t,delta_t,v_2_t*delta_t
+                  WRITE(3333,*) "Theta Angle Before and After:",
+     &            pos_tracer_theta_old(i),pos_tracer_theta(i)
+
 #if DIMN==3
                   pos_tracer_phi(i) = (pos_tracer_phi_old(i)
      &            + 2*(pos_tracer_phi(i) + v_3_t * delta_t))/
      &            3.0_rk
-ccc                  WRITE(5555,*) "Velocity and dt",v_3_t,delta_t
-ccc                  WRITE(5555,*) "Angle:",
-ccc     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+                  WRITE(3333,*) "Phi Velocity and dt",
+     &            v_3_t,delta_t,v_3_t*delta_t
+                  WRITE(3333,*) "Phi Angle Before and After:",
+     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+
 #endif
             END IF
          pos_tracer_phi(i) = mod(pos_tracer_phi(i),2.0_rk*pc_pi)
@@ -476,7 +522,7 @@ ccc     &            pos_tracer_phi_old(i),pos_tracer_phi(i)
             pos_tracer_phi(i) = pos_tracer_phi(i) + 2.0_rk*pc_pi
          end if
       END DO LOOP_INT
-ccc      WRITE(5555,*) "INTEGRATION FINISHED"
+      WRITE(3333,*) "INTEGRATION FINISHED"
       END SUBROUTINE tracer_integral
 c     ==================================================================
 
@@ -615,17 +661,17 @@ c     ==================================================================
             tci_r = tracer_ci_r(i)
             tci_t = tracer_ci_theta(i)
             tci_p = tracer_ci_phi(i)
-ccc            WRITE(7777,*) "-----------------------"
-ccc            WRITE(7777,*) 'TRACER NO = ', i,'TIME = ', time," ",nstep
-ccc            WRITE(7777,*) 'GLOBAL ID=',tracer_id(i)
-ccc            WRITE(7777,*) 'IPROC = ', tracer_proc(i)
-ccc            WRITE(7777,*) 'position r = ',pos_tracer_r(i),tci_r
-ccc            WRITE(7777,*) 'position theta = ', pos_tracer_theta(i),tci_t
-ccc            WRITE(7777,*) 'position phi = ', pos_tracer_phi(i), tci_p
-ccc            WRITE(7777,*) 'v_r = ',v_1_tracer(i)
-ccc            WRITE(7777,*) 'v_theta = ', v_2_tracer(i)
-ccc            WRITE(7777,*) 'v_phi = ', v_3_tracer(i)
-ccc            WRITE(7777,*) 'SEGEMENT:',n_ts,n_te
+            WRITE(7777,*) "-----------------------"
+            WRITE(7777,*) 'TRACER NO = ', i,'TIME = ', time," ",nstep
+            WRITE(7777,*) 'GLOBAL ID=',tracer_id(i)
+            WRITE(7777,*) 'IPROC = ', tracer_proc(i)
+            WRITE(7777,*) 'position r = ',pos_tracer_r(i),tci_r
+            WRITE(7777,*) 'position theta = ', pos_tracer_theta(i),tci_t
+            WRITE(7777,*) 'position phi = ', pos_tracer_phi(i), tci_p
+            WRITE(7777,*) 'v_r = ',v_1_tracer(i)
+            WRITE(7777,*) 'v_theta = ', v_2_tracer(i)
+            WRITE(7777,*) 'v_phi = ', v_3_tracer(i)
+            WRITE(7777,*) 'SEGEMENT:',n_ts,n_te
       END DO LOOP_PRINT
       END SUBROUTINE tracer_print
 c     ==================================================================
@@ -655,8 +701,8 @@ c     ==================================================================
       ir = tracer_ci_r(ti)
       it = tracer_ci_theta(ti)
       ip = tracer_ci_phi(ti)
-ccc      WRITE(5555,*) "-------------INTERP:",dbg,"------------------"
-ccc      WRITE(5555,*) "Search Index Result:",ir,it,ip
+      WRITE(4444,*) "-------------INTERP:",dbg,"------------------"
+      WRITE(4444,*) "Search Index Result:",ir,it,ip
       xir0 = (pos_r-r_if(ir-1))/delta_r(ir)
       xir1 = 1 - xir0
       xit0 = (pos_t-theta_if(it-1))/delta_theta
@@ -677,7 +723,7 @@ ccc      WRITE(5555,*) "Search Index Result:",ir,it,ip
             xip1 = xip1 - floor(xip1)
             xip0 = 1 - xip1
       end if
-ccc      WRITE(5555,*) "Ratios:",xit0,xit1,xip0,xip1
+      WRITE(4444,*) "Ratios:",xit0,xit1,xip0,xip1
 #if DIMN<=2
             val =  xit1*(xir1*arr(ir-1,it-1,1)+xir0*arr(ir,it-1,1))+xit0*
      &     (xir1*arr(ir-1,it,1)+xir0*arr(ir,it,1))
@@ -691,12 +737,12 @@ ccc      WRITE(5555,*) "Ratios:",xit0,xit1,xip0,xip1
      &            xir0*xit1*xip0*arr(ir,it-1,ip) +
      &            xir1*xit0*xip0*arr(ir-1,it,ip) +
      &            xir0*xit0*xip0*arr(ir,it,ip)
-ccc      WRITE(5555,*) "8 GRID VALUE:",arr(ir-1,it-1,ip-1),
-ccc     & arr(ir,it-1,ip-1),arr(ir-1,it,ip-1),arr(ir,it,ip-1),
-ccc     & arr(ir-1,it-1,ip),arr(ir,it-1,ip),arr(ir-1,it,ip),
-ccc     & arr(ir,it,ip)
+      WRITE(4444,*) "8 GRID VALUE:",arr(ir-1,it-1,ip-1),
+     & arr(ir,it-1,ip-1),arr(ir-1,it,ip-1),arr(ir,it,ip-1),
+     & arr(ir-1,it-1,ip),arr(ir,it-1,ip),arr(ir-1,it,ip),
+     & arr(ir,it,ip)
 #endif
-CCC      WRITE(5555,*) "INTERP RESULT:",val
+      WRITE(4444,*) "INTERP RESULT:",dbg,val
 ccc   add debug sentence
       END FUNCTION linear_interpolation
 c     ==================================================================
