@@ -33,6 +33,7 @@ c     ============================================================
       LOGICAL :: periods_t (2)
       INTEGER (KIND=ik) :: ierr_t
       INTEGER (kind=ik) :: sum_prf
+      logical, parameter :: debug_mode = .false.
 
       CONTAINS
 c     ============================================================
@@ -50,22 +51,22 @@ c     &  trnum_rstrt
       
       integer :: istat
       integer(kind=ik) :: i,j
-      character*64 :: dfilename,procstr,outfilename,mpifilename
+      character*64 :: dfilename,procstr,outfilename,mpi2d
       character*64 :: mpi3d,rsfilename,interpf,integrationf
       logical, intent(in) :: tracer_rstrt
       integer(kind=ik) :: log2proc
       WRITE(unit=procstr,fmt='(i4)') myproc
       procstr = trim(adjustl(procstr))
-      outfilename = 'debugmpi/file'//procstr
-      dfilename = 'debugmpi/debug'// procstr
-      mpifilename = 'debugmpi/mpi' // procstr
-      mpi3d = 'debugmpi/3d' //procstr
+      outfilename = 'debugmpi/mainout'//procstr
+      dfilename = 'debugmpi/debugout'// procstr
+      mpi2d = 'debugmpi/mpitheta' // procstr
+      mpi3d = 'debugmpi/mpiphi' //procstr
       rsfilename = 'debugmpi/rstrt'// procstr
       interpf = 'debugmpi/interp' //procstr
       integrationf = 'debugmpi/integration'//procstr
       OPEN(UNIT=7777,FILE=outfilename)
       OPEN(UNIT=8888,FILE=dfilename)
-      open(UNIT=9999,FILE=mpifilename)
+      open(UNIT=9999,FILE=mpi2d)
       open(UNIT=6666,FILE=mpi3d)
       open(UNIT=5555,FILE=rsfilename)
       open(UNIT=4444,FILE=interpf)
@@ -73,6 +74,10 @@ c     &  trnum_rstrt
       tracer_pp = config%trpp
       qyrays_t = n_e-n_s+1
       qzrays_t = o_e-o_s+1
+
+      CALL MPI_Cart_get (cart_comm, 2_ik, dims_t, periods_t,
+     &     coords_t, ierr_t)
+
       if(tracer_rstrt) then
         write(5555,*) "Restart, Skip Initializing"
         return 
@@ -80,8 +85,6 @@ c     &  trnum_rstrt
       tracer_total = tracer_pp * nprocs
       tracer_num = tracer_pp
 
-      CALL MPI_Cart_get (cart_comm, 2_ik, dims_t, periods_t,
-     &     coords_t, ierr_t)
       WRITE(7777,*) "INIT INFO:tracer per process:",tracer_pp
       WRITE(7777,*) "INIT INFO:tracer total",tracer_total
       WRITE(7777,*) "INIT INFO:y-rays total",qyrays_t
