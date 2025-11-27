@@ -362,10 +362,14 @@ c     ==================================================================
       real (KIND=rk) :: v_1_t,v_2_t,v_3_t,temp_t      
       integer (KIND=ik), INTENT(IN) :: rkint_order
       real(KIND=rk), INTENT(IN) :: alpha_rk,beta_rk,delta_t
+      if(debug_mode) then
       WRITE(3333,*) "INTEGRATION START at time:",time," ",nstep
+      end if
       LOOP_INT:DO i=1,tracer_num
+      if(debug_mode) then
             WRITE(3333,*) "-------------INTEGRATION FOR TRACER",i,
      &      "------------------"
+      end if
             call tci_search(i)
             call tci_t_search(i)
             ir = tracer_ci_r(i)
@@ -374,35 +378,39 @@ c     ==================================================================
 #if DIMN == 3
             call tci_p_search(i)
             ip = tracer_ci_phi(i)
+      if(debug_mode) then
             WRITE(3333,'(A,1X,E12.4,1X,E12.4)'),
      &      "Angle Pre-Integration:",
      &      pos_tracer_theta(i),pos_tracer_phi(i)
+      end if
 #endif
             IF((ir.lt.0).or.(ir.gt.m))   THEN
                   CYCLE LOOP_INT
             END IF
 #if DIMN<=2
             v_1_t = linear_interpolation
-     &      (v_1(-1:m+1,n_s-1:n_e+1,1),-1,m+1,n_s-1,n_e+1,1,1,i,
+     &      (v_1(-2:m+2,n_s-2:n_e+2,1),-2,m+2,n_s-2,n_e+2,1,1,i,
      &      .false.,"v_1")
      
             v_2_t = bilineary_interpolation
-     &      (v_2(-1:m+1,n_s-1:n_e+1,1),-1,m+1,n_s-1,n_e+1,1,1,i,
+     &      (v_2(-2:m+2,n_s-2:n_e+2,1),-2,m+2,n_s-2,n_e+2,1,1,i,
      &      .false.,"v_2")
 #endif
 
 #if DIMN==3
             v_1_t = linear_interpolation
-     &      (v_1(-1:m+1,n_s-1:n_e+1,o_s-1:o_e+1),-1,m+1,n_s-1,
-     &      n_e+1,o_s-1,o_e+1,i,.false.,"v_1")
+     &      (v_1(-2:m+2,n_s-2:n_e+2,o_s-2:o_e+2),-2,m+2,n_s-2,
+     &      n_e+2,o_s-2,o_e+2,i,.false.,"v_1")
             v_2_t = linear_interpolation
-     &      (v_2(-1:m+1,n_s-1:n_e+1,o_s-1:o_e+1),-1,m+1,n_s-1,
-     &      n_e+1,o_s-1,o_e+1,i,.false.,"v_2")
+     &      (v_2(-2:m+2,n_s-2:n_e+2,o_s-2:o_e+2),-2,m+2,n_s-2,
+     &      n_e+2,o_s-2,o_e+2,i,.false.,"v_2")
             v_3_t = linear_interpolation
-     &      (v_3(-1:m+1,n_s-1:n_e+1,o_s-1:o_e+1),-1,m+1,n_s-1,
-     &      n_e+1,o_s-1,o_e+1,i,.false.,"v_3")
+     &      (v_3(-1:m+2,n_s-2:n_e+2,o_s-2:o_e+2),-2,m+2,n_s-2,
+     &      n_e+2,o_s-2,o_e+2,i,.false.,"v_3")
+      if(debug_mode) then
             WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &      "Interpolate Velocity :",v_1_t,v_2_t,v_3_t
+      end if
 #endif
             IF((it.lt.n_s))      THEN
                it = n_s
@@ -415,23 +423,30 @@ c     ==================================================================
             ELSE IF(ip.gt.o_e)      THEN
                ip = o_e
             END IF
+      if(debug_mode) then
             WRITE(3333,*) "Cell Index:",ir,it,ip
             WRITE(3333,'(A,1X,E12.4)') 
      &      "Alpha:",alpha(ir,it,ip)
+      end if
             v_1_t = g_up_11(ir,it,ip)*v_1_t - 
      &      beta_up_1(ir,it,ip)/alpha(ir,it,ip)
+      if(debug_mode) then
             WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &      "Geometric1:",
      &      g_up_11(ir,it,ip),beta_up_1(ir,it,ip)
+      end if
 
             v_2_t = g_up_22(ir,it,ip)*v_2_t-
      &      beta_up_2(ir,it,ip)/alpha(ir,it,ip)
+      if(debug_mode) then
             WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &      "Geometric2:",
      &      g_up_22(ir,it,ip),beta_up_2(ir,it,ip)
+      end if
 #if DIMN==3
             v_3_t = g_up_33(ir,it,ip)*v_3_t-
      &      beta_up_3(ir,it,ip)/alpha(ir,it,ip)  
+      if(debug_mode) then
             WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &      "Geometric3:",
      &      g_up_33(ir,it,ip),beta_up_3(ir,it,ip)
@@ -439,109 +454,133 @@ c     ==================================================================
             WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)')
      &      "Corrected velocity:",v_1_t,v_2_t,
      &      v_3_t
+      end if
             v_1_tracer(i) = v_1_t
             v_2_tracer(i) = v_2_t
             v_3_tracer(i) = v_3_t
 #endif
 
             IF(rkint_order.eq.1)    THEN
+      if(debug_mode) then
                   WRITE(3333,*) "RK1"
+      end if
                   pos_tracer_r_old(i) = pos_tracer_r(i)
                   pos_tracer_r(i) = pos_tracer_r_old(i) + 
      &            v_1_t*delta_t
+      if(debug_mode) then
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &            "Radial Velocity and dt",
      &            v_1_t,delta_t,v_1_t*delta_t
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &            "Radius Before and After:",
      &            pos_tracer_r_old(i),pos_tracer_r(i)
-
+      end if
                   pos_tracer_theta_old(i) = pos_tracer_theta(i)
                   pos_tracer_theta(i) = pos_tracer_theta_old(i) +
      &            v_2_t*delta_t
+      if(debug_mode) then
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &            "Theta Velocity and dt",
      &            v_2_t,delta_t,v_2_t*delta_t
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &            "Theta Angle Before and After:",
      &            pos_tracer_theta_old(i),pos_tracer_theta(i)
+      end if
 #if DIMN==3
                   pos_tracer_phi_old(i) = pos_tracer_phi(i)
                   pos_tracer_phi(i) = pos_tracer_phi_old(i) +
      &            v_3_t*delta_t
+      if(debug_mode) then
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &            "Phi Velocity and dt",
      &            v_3_t,delta_t,v_3_t*delta_t
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &            "Phi Angle Before and After:",
      &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+      end if
 #endif 
             ELSE IF(rkint_order.eq.2)     THEN
+      if(debug_mode) then
                   WRITE(3333,*) "RK2"
+      end if
                   pos_tracer_r(i) = (beta_rk * pos_tracer_r_old(i)
      &            + pos_tracer_r(i)+ v_1_t * delta_t)/alpha_rk
+      if(debug_mode) then
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &            "Radial Velocity and dt",
      &            v_1_t,delta_t,v_1_t*delta_t
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &            "Radius Before and After:",
      &            pos_tracer_r_old(i),pos_tracer_r(i)
+      end if
 
                   pos_tracer_theta(i) = (beta_rk * pos_tracer
      &            _theta_old(i) + pos_tracer_theta(i) + v_2_t
      &            * delta_t)/alpha_rk
+      if(debug_mode) then
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &            "Theta Velocity and dt",
      &            v_2_t,delta_t,v_2_t*delta_t
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &            "Theta Angle Before and After:",
      &            pos_tracer_theta_old(i),pos_tracer_theta(i)
+      end if
 
 #if DIMN==3
                   pos_tracer_phi(i) = (beta_rk * pos_tracer
      &            _phi_old(i) + pos_tracer_phi(i) + v_3_t
      &            * delta_t)/alpha_rk
+      if(debug_mode) then
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &            "Phi Velocity and dt",
      &            v_3_t,delta_t,v_3_t*delta_t
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &            "Phi Angle Before and After:",
      &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+      end if
 
 #endif 
             ELSE IF(rkint_order.eq.3)     THEN
+      if(debug_mode) then
                   WRITE(3333,*) "RK3"
+      end if
                   pos_tracer_r(i) = 
      &            (pos_tracer_r_old(i)+2*(pos_tracer_r(i)
      &            +v_1_t * delta_t)) / 3.0_rk
+      if(debug_mode) then
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &            "Radial Velocity and dt",
      &            v_1_t,delta_t,v_1_t*delta_t
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &            "Radius Before and After:",
      &            pos_tracer_r_old(i),pos_tracer_r(i)
+      end if
 
 
                   pos_tracer_theta(i) = (pos_tracer_theta_old(i)
      &            + 2*(pos_tracer_theta(i) + v_2_t * delta_t))/
      &            3.0_rk
+      if(debug_mode) then
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &            "Theta Velocity and dt",
      &            v_2_t,delta_t,v_2_t*delta_t
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &            "Theta Angle Before and After:",
      &            pos_tracer_theta_old(i),pos_tracer_theta(i)
+      end if
 
 #if DIMN==3
                   pos_tracer_phi(i) = (pos_tracer_phi_old(i)
      &            + 2*(pos_tracer_phi(i) + v_3_t * delta_t))/
      &            3.0_rk
+      if(debug_mode) then
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4,1X,E12.4)') 
      &            "Phi Velocity and dt",
      &            v_3_t,delta_t,v_3_t*delta_t
                   WRITE(3333,'(A,1X,E12.4,1X,E12.4)') 
      &            "Phi Angle Before and After:",
      &            pos_tracer_phi_old(i),pos_tracer_phi(i)
+      end if
 
 #endif
             END IF
@@ -550,7 +589,9 @@ c     ==================================================================
             pos_tracer_phi(i) = pos_tracer_phi(i) + 2.0_rk*pc_pi
          end if
       END DO LOOP_INT
+      if(debug_mode) then
       WRITE(3333,*) "INTEGRATION FINISHED"
+      end if
       END SUBROUTINE tracer_integral
 c     ==================================================================
 
@@ -682,7 +723,7 @@ c     ==================================================================
       IMPLICIT NONE
       
       integer (KIND=ik) :: i,tci_r,tci_t, tci_p
-      IF(time-tracer_printtime.le.0.0001_rk) THEN
+      IF(time-tracer_printtime.le.0.0001_rk.and.(.not.debug_mode)) THEN
             return
       END IF
       tracer_printtime = time
@@ -703,6 +744,7 @@ c     ==================================================================
             WRITE(7777,*) 'SEGEMENT:',n_ts,n_te
             if((pos_tracer_r(i).ge.1e11).or.
      &      (pos_tracer_r(i).lt.0)) then
+               WRITE(8888,*) 'Step:',nstep
                WRITE(8888,*) 'Warning: TRACER',i,"(GLOBAL ID:",
      &         tracer_id(i),") Radius>1e11 cm,(",pos_tracer_r(i),")"
                print *,'Warning: TRACER',i,"(GLOBAL ID:",
@@ -710,6 +752,7 @@ c     ==================================================================
             end if
             if((pos_tracer_theta(i).ge.pc_pi).or.
      &      (pos_tracer_theta(i).lt.0)) then
+               WRITE(8888,*) 'Step:',nstep
                WRITE(8888,*) 'Warning: TRACER',i,"(GLOBAL ID:",
      &         tracer_id(i),") Theta Out of Bound,("
      &         ,pos_tracer_theta(i),")"
@@ -719,9 +762,7 @@ c     ==================================================================
             end if
             if((pos_tracer_phi(i).ge.2*pc_pi).or.
      &      (pos_tracer_phi(i).lt.0)) then
-               WRITE(8888,*) 'Warning: TRACER',i,"(GLOBAL ID:",
-     &         tracer_id(i),") Phi Out of Bound,("
-     &         ,pos_tracer_phi(i),")"
+               WRITE(8888,*) 'Step:',nstep
                WRITE(8888,*) 'Warning: TRACER',i,"(GLOBAL ID:",
      &         tracer_id(i),") Phi Out of Bound,("
      &         ,pos_tracer_phi(i),")"
@@ -740,6 +781,7 @@ c     ==================================================================
       USE metric_cfc
       USE tracer_cfc
       USE gfloat_hy, ONLY: time
+      use intgrs_hy, only : nstep
       INTEGER, INTENT(in) :: ti,l1,u1,l2,u2,l3,u3
       REAL  :: arr(l1:u1,l2:u2,l3:u3)
       REAL :: val
@@ -758,6 +800,8 @@ c     ==================================================================
       if(debug_mode) then
       WRITE(4444,*) "-------------INTERP:",dbg,"------------------"
       WRITE(4444,*) "Search Index Result:",ir,it,ip
+      WRITE(4444,*) "Tracer Index:",ti,"Step:",nstep
+      WRITE(4444,*) "Range:",l1,u1,l2,u2,l3,u3
       end if
       xir0 = (pos_r-r_if(ir-1))/delta_r(ir)
       xir1 = 1 - xir0
@@ -780,7 +824,7 @@ c     ==================================================================
             xip0 = 1 - xip1
       end if
       if(debug_mode) then
-      WRITE(4444,*) "Ratios:",xit0,xit1,xip0,xip1
+      WRITE(4444,*) "Ratios:",xir0,xir1,xit0,xit1,xip0,xip1
       end if
 #if DIMN<=2
             val =  xit1*(xir1*arr(ir-1,it-1,1)+xir0*arr(ir,it-1,1))+xit0*
@@ -803,7 +847,10 @@ c     ==================================================================
       end if
 #endif
       if(debug_mode) then
-      WRITE(4444,*) "INTERP RESULT:",dbg,val
+         WRITE(4444,*) "INTERP RESULT:",dbg,val
+      end if
+      if(abs(val).ge.1e10) then
+         WRITE(8888,*) "WARNING: INTERP ERROR AT:",nstep
       end if
 ccc   add debug sentence
       END FUNCTION linear_interpolation
@@ -875,7 +922,7 @@ c     ==================================================================
       INTEGER :: istat
       INTEGER(kind=ik) :: nsend_l,nsend_r,nrecv_l,nrecv_r,tracer_num_new
       INTEGER(kind=ik) :: i_sl,i_sr,i_ns
-      INTEGER(kind=ik) :: i,j,k,phi_t
+      INTEGER(kind=ik) :: i,j,k,phi_t,i_mid
 C      LOGICAL :: issent,numchanged
 c     BM: More efficient to use an array for issent
       LOGICAL :: numchanged
@@ -925,9 +972,9 @@ c                       count sent tracers to right
                   end if 
 c                 sendrecv number to left and right(cart shift and ... problem: idk if cart shift will get PROC NULL when out of boundary in phi direction)
             end do
-            if(d*2.eq.dims_t(2)) then
-                  nsend_l = 0
-            end if
+c            if(d*2.eq.dims_t(2)) then
+c                  nsend_l = 0
+c            end if
 c           if d = phi_process/2, then only right direction is allowed in order to avoid duplicated transport
             if(debug_mode) then
             WRITE(6666,*) 'Number of tracers to be sent: left--'
@@ -1017,7 +1064,7 @@ ccc            end if
                   end if
                   if(btest(abs(d_target),d_bit)) then
                      if(d_target<0) then
-                        if(d*2.ne.dims_t(2)) then
+cccc                        if(d*2.ne.dims_t(2)) then
                            i_sl = i_sl + 1
                            sbuffer_tl(i_sl,1) = tracer_id(i)
                            sbuffer_tl(i_sl,2) = pos_tracer_r(i)
@@ -1032,7 +1079,7 @@ ccc            end if
                            WRITE(6666,*) 'Theta',sbuffer_tl(i_sl,3)
                            WRITE(6666,*) 'Phi:',sbuffer_tl(i_sl,6)
 c                           count sent tracers to left
-                           end if
+ccc                           end if
                         end if
                      else
                         i_sr = i_sr + 1
@@ -1098,10 +1145,53 @@ c                       count sent tracers to right
      &      src_r,tag_zl,cart_comm,mpistat,ierr)
             if(debug_mode) then
             WRITE(6666,*) "SENDRECV -d finished"
-            end if
+            WRITE(6666,*) "Recv Check:Left Size",size(rbuffer_tl,1)
+            WRITE(6666,*) "Recv Check:Right Size",size(rbuffer_tr,1)
+            WRITE(6666,*) "LeftSpace:",i_ns+1,i_ns+nrecv_l
+            WRITE(6666,*) "RightSpace:",i_ns+nrecv_l+1,
+     &      tracer_num_new,i_ns+nrecv_l+nrecv_r
+            end if 
+            
             buffer_tnew(i_ns+1:i_ns+nrecv_l,:) = rbuffer_tl(:,:)
             buffer_tnew(i_ns+nrecv_l+1:tracer_num_new,:) 
      &      = rbuffer_tr(:,:)
+            if(i_ns+nrecv_l+nrecv_r.ne.tracer_num_new) then
+                  WRITE(8888,*) "Step:",nstep,"Warning:",
+     &            "NEW TRACER NUM ERROR!"
+                  WRITE(6666,*) "Step:",nstep,"Warning:",
+     &            "NEW TRACER NUM ERROR!"
+            end if
+            if(debug_mode) then
+               if(nrecv_l.ne.0) then
+                  WRITE(6666,*) "WRITE LEFT TRACERS FROM ",dest_l
+                  WRITE(6666,*), i_ns+1,i_ns+nrecv_l
+                  do i = i_ns+1,i_ns+nrecv_l
+                  WRITE(6666,*) "ID:",rbuffer_tl(i-i_ns,1),
+     &            buffer_tnew(i,1)
+                  WRITE(6666,*) "Radius:",rbuffer_tl(i-i_ns,2),
+     &            buffer_tnew(i,2)
+                  WRITE(6666,*) "Theta:",rbuffer_tl(i-i_ns,3),
+     &            buffer_tnew(i,3)
+                  WRITE(6666,*) "Phi:",rbuffer_tl(i-i_ns,4),
+     &            buffer_tnew(i,4)
+                  end do
+               end if 
+               if(nrecv_r.ne.0) then
+                  WRITE(6666,*) "WRITE RIGHT TRACERS FROM ",dest_R
+                  i_mid = i_ns+nrecv_l
+                  WRITE(6666,*) i_mid+1,tracer_num_new
+                  do i = i_mid+1,tracer_num_new
+                  WRITE(6666,*) "ID:",rbuffer_tr(i-i_mid,1),
+     &            buffer_tnew(i,1)
+                  WRITE(6666,*) "Radius:",rbuffer_tr(i-i_mid,2),
+     &            buffer_tnew(i,2)
+                  WRITE(6666,*) "Theta:",rbuffer_tr(i-i_mid,3),
+     &            buffer_tnew(i,3)
+                  WRITE(6666,*) "Phi:",rbuffer_tr(i-i_mid,4),
+     &            buffer_tnew(i,4)
+                  end do
+               end if
+            end if
             if(debug_mode) then
             WRITE(6666,*) "i_ns",i_ns,"i_ns+nrecv_l+nrecv_r",i_ns+
      &      nrecv_l+nrecv_r,'total:',tracer_num_new
@@ -1157,8 +1247,9 @@ ccc           WRITE(6666,*) "Deallocate Finished, Waiting for next round"
          call tci_p_search(i)
       end do
       WRITE(6666,*) "MPI_TRACER_3D FINISHED"
+      if(debug_mode) then
       call tracer_print
-
+      end if
       
       END SUBROUTINE MPI_TRACER_3D
 c     ==================================================================
